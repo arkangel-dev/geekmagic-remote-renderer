@@ -10,7 +10,8 @@
 		"example:react:customfont": "pnpx tsx watch src/examples/react-custom-font.tsx",
 		"example:react:gitlab": "pnpx tsx watch src/examples/react-gitlab-status.tsx",
 		"example:react:fonttest": "pnpx tsx watch src/examples/font-tester.tsx",
-		"example:react:readme": "pnpx tsx watch src/examples/react-readme.tsx"
+		"example:react:readme": "pnpx tsx watch src/examples/react-readme.tsx",
+		"font:convert": "pnpx tsx src/gm-renderer/font-converter/index.ts"
 	},
 	"keywords": [],
 	"author": "",
@@ -18,13 +19,16 @@
 	"packageManager": "pnpm@10.13.1",
 	"devDependencies": {
 		"@types/node": "latest",
+		"@types/opentype.js": "^1.3.10",
 		"@types/react": "^19.2.18",
 		"@types/react-reconciler": "^0.33.0",
 		"@types/ws": "^8.18.1",
 		"typescript": "^7.0.2"
 	},
 	"dependencies": {
+		"@napi-rs/canvas": "^1.0.10",
 		"dotenv": "^17.4.2",
+		"opentype.js": "^2.0.0",
 		"react": "^19.2.8",
 		"react-reconciler": "^0.33.0",
 		"uuid": "^14.0.2",
