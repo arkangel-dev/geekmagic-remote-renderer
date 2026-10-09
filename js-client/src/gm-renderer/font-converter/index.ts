@@ -19,18 +19,10 @@ import { BuildCharset } from "./build-charset.js";
 import { EncodeVlw } from "./encode-vlw.js";
 import { ComputeAscentDescent, hex } from "./utils.js";
 
-const [argFile, argSize, argName] = process.argv.slice(2);
-if (argFile) config.fontFile = argFile;
-if (argSize) config.fontSize = parseInt(argSize, 10);
-if (argName) {
-	config.outputName = argName;
-	config.outputDir = path.dirname(argName);
-} else if (argFile)
-	config.outputName = path.basename(argFile).replace(/\.(ttf|otf)$/i, "");
-
-function main() {
+function Convert(setConf: typeof config | null) {
+	if (!setConf) setConf = config;
 	const font = opentype.parse(
-		fs.readFileSync(config.fontFile).buffer as ArrayBuffer,
+		fs.readFileSync(setConf.fontFile).buffer as ArrayBuffer,
 	);
 	const charset = BuildCharset();
 	if (charset.length === 0)
@@ -38,13 +30,13 @@ function main() {
 
 	console.log("=====================");
 	console.log("Creating font file...");
-	console.log(`Unicode blocks included     = ${config.unicodeBlocks.length}`);
+	console.log(`Unicode blocks included     = ${setConf.unicodeBlocks.length}`);
 	console.log(
-		`Specific unicodes included  = ${config.specificUnicodes.length}`,
+		`Specific unicodes included  = ${setConf.specificUnicodes.length}`,
 	);
 	console.log(`Total characters requested  = ${charset.length}`);
 
-	const size = config.fontSize;
+	const size = setConf.fontSize;
 	const glyphs: VlwGlyph[] = [];
 	const missing: number[] = [];
 	for (const c of charset) {
@@ -65,13 +57,13 @@ function main() {
 	console.log(`Glyphs written              = ${glyphs.length}`);
 
 	const { ascent, descent } = ComputeAscentDescent(font, size);
-	const name = font.names.fullName?.en ?? config.outputName;
-	const psname = font.names.postScriptName?.en ?? config.outputName;
+	const name = font.names.fullName?.en ?? setConf.outputName;
+	const psname = font.names.postScriptName?.en ?? setConf.outputName;
 	const vlw = EncodeVlw(glyphs, size, ascent, descent, name, psname);
 
-	fs.mkdirSync(config.outputDir, { recursive: true });
-	const base = `${config.outputName}-${size}`;
-	const vlwPath = path.join(config.outputDir, `${base}.vlw`);
+	fs.mkdirSync(setConf.outputDir, { recursive: true });
+	const base = setConf.outputName
+	const vlwPath = path.join(setConf.outputDir, `${base}.vlw`);
 	fs.writeFileSync(vlwPath, vlw);
 	console.log(`Saved ${vlwPath} (${vlw.length} bytes)`);
 
@@ -86,4 +78,4 @@ function main() {
 	console.log("All done!");
 }
 
-main();
+export default Convert;

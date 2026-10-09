@@ -1,4 +1,8 @@
 import type { GeekMagicRenderer } from "@geekmagic-websocket/index.js";
+import Convert from "@geekmagic-websocket/font-converter/index.js";
+import { config as fontConverterConfig } from "@geekmagic-websocket/font-converter/default-config.js";
+import path from "node:path";
+import { existsSync } from "node:fs";
 
 interface LoadOptions {
 	renderer: GeekMagicRenderer;
@@ -70,16 +74,60 @@ const fontStore: Record<string, (o: LoadOptions) => Promise<void>> = {
 	},
 };
 
+export interface FontImportSettings {
+	/**
+	 * The path to the font file.
+	 * Expects a TTF file
+	 */
+	fontPath: string
+	/**
+	 * The name of the VLW name that will be
+	 * used in the FontText component to refer
+	 * to this font
+	 */
+	vlwName: string,
+
+	fontSize: number,
+
+	/**
+	 * Describes the range of characters included in this font.
+	 */
+	characterSetRange: [number, number];
+}
+
 export async function LoadFontsAsync(
 	renderer: GeekMagicRenderer,
-	fonts: string[],
+	fonts: FontImportSettings[],
 ) {
 	const loadOptions: LoadOptions = {
 		renderer,
 		fontFiles: [],
 	};
 	for (const font of fonts) {
-		const loader = fontStore[font];
+		const { fontPath, vlwName, fontSize, characterSetRange } = font;
+		const outputDir = fontConverterConfig.outputDir;
+		const vlwPath = path.join(outputDir, `${vlwName}.vlw`);
+
+		// Only (re)generate the vlw file if it doesn't already exist locally.
+		if (!existsSync(vlwPath)) {
+			// `BuildCharset` reads the character range directly off the shared
+			// `fontConverterConfig` singleton, so it must be mutated here rather
+			// than just passed through `Convert`'s `setConf` argument.
+			fontConverterConfig.unicodeBlocks = [characterSetRange];
+			fontConverterConfig.specificUnicodes = [];
+			Convert({
+				...fontConverterConfig,
+				fontFile: fontPath,
+				outputName: vlwName,
+				outputDir,
+				fontSize,
+				createPreview: false,
+			});
+		}
+
+		loadOptions.fontFiles.push(vlwPath);
+
+		const loader = fontStore[`${vlwName}`];
 		if (loader) await loader(loadOptions);
 	}
 

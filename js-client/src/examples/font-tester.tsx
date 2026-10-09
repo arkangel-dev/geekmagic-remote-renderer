@@ -5,7 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import { LoadFontsAsync } from "./font-store.js";
 
 // This is a font tester example. Define the font down here...
-const targetFont = "MartianMono-Regular25";
+const targetFont = "MartianMono.ttf";
+const fontSize = 25;
+
+const vlwName = `${targetFont.split(".")[0]}-${fontSize}`;
 const secondWord = "HI THERE";
 
 // And then set the environment variable DEV_BLIT_MODE to true,
@@ -38,10 +41,10 @@ function GenericExample() {
 	return (
 		<Box tb="w-[240] h-[240] p-[5]">
 			<Box tb="h-full w-full border-[#bb4d4d] items-center justify-center flex flex-col gap-[10]">
-				<FontText tb={`text-[${fontColor}]`} vlw={targetFont}>
+				<FontText tb={`text-[${fontColor}]`} vlw={vlwName}>
 					{randomWord}
 				</FontText>
-				<FontText tb={`text-[${fontColor}]`} vlw={targetFont}>
+				<FontText tb={`text-[${fontColor}]`} vlw={vlwName}>
 					{secondWord}
 				</FontText>
 			</Box>
@@ -56,5 +59,12 @@ const [renderer, render] = await CreateRenderer({
 	port: 81,
 });
 
-await LoadFontsAsync(renderer, [targetFont]);
+await LoadFontsAsync(renderer, [
+	{
+		fontPath: `example_assets/raw_fonts/${targetFont}`,
+		vlwName,
+		fontSize,
+		characterSetRange: [32, 126],
+	},
+]);
 render(<GenericExample />);
