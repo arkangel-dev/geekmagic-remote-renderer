@@ -5,11 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 import { LoadFontsAsync } from "./font-store.js";
 
 // This is a font tester example. Define the font down here...
-const targetFont = "MartianMono.ttf";
-const fontSize = 25;
+const targetFont = "Jaro-Regular.ttf";
+const fontSize = 30;
 
 const vlwName = `${targetFont.split(".")[0]}-${fontSize}`;
-const secondWord = "HI THERE";
+const secondWord = "Hi There!";
 
 // And then set the environment variable DEV_BLIT_MODE to true,
 // This will display a shade of purple as the blit background, making it
@@ -34,7 +34,7 @@ function GenericExample() {
 				() => letterList[Math.floor(Math.random() * letterList.length)],
 			).join("");
 			setRandomWord(randomWord);
-		}, 300);
+		}, 1000);
 		return () => clearInterval(interval);
 	}, []);
 

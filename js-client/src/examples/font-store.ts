@@ -12,15 +12,15 @@ export interface FontImportSettings {
 	 * The path to the font file.
 	 * Expects a TTF file
 	 */
-	fontPath: string
+	fontPath: string;
 	/**
 	 * The name of the VLW name that will be
 	 * used in the FontText component to refer
 	 * to this font
 	 */
-	vlwName: string,
+	vlwName: string;
 
-	fontSize: number,
+	fontSize: number;
 
 	/**
 	 * Describes the range of characters included in this font.
@@ -59,7 +59,8 @@ export async function LoadFontsAsync(
 		// is recorded, so proportional (non-monospace) fonts measure and blit
 		// correctly instead of assuming a single fixed character width.
 		const glyphWidths: Record<number, number> = {};
-		for (const glyph of converted.glyphs) glyphWidths[glyph.value] = glyph.setWidth;
+		for (const glyph of converted.glyphs)
+			glyphWidths[glyph.value] = glyph.setWidth;
 
 		renderer.FontBlitSettings.push({
 			vlwName,
@@ -67,10 +68,10 @@ export async function LoadFontsAsync(
 				// Fallback width for characters outside the requested range.
 				width: converted.spaceAdvance,
 				height: converted.ascent + converted.descent,
-				top: -1,
+				top: 0,
 				left: 0,
 			},
-			spaceWidth: 1,
+			spaceWidth: converted.spaceAdvance,
 			glyphWidths,
 		});
 
@@ -78,11 +79,11 @@ export async function LoadFontsAsync(
 	}
 
 	const existingAssetsResponse = await renderer.ListAssetsAsync();
-	// If any of them are missing, Wipe the existing 
+	// If any of them are missing, Wipe the existing
 	// assets and upload the required font files.
 	const existingAssetNames = existingAssetsResponse.map((x) => x.name);
 	const missingFontFiles = loadOptions.fontFiles.filter(
-		(assetPath) => !existingAssetNames.includes(assetPath.split("/").pop()!)
+		(assetPath) => !existingAssetNames.includes(assetPath.split("/").pop()!),
 	);
 	if (missingFontFiles.length > 0) {
 		await renderer.WipeAssetsAsync();
