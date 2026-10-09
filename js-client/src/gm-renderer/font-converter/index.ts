@@ -19,7 +19,22 @@ import { BuildCharset } from "./build-charset.js";
 import { EncodeVlw } from "./encode-vlw.js";
 import { ComputeAscentDescent, hex } from "./utils.js";
 
-function Convert(setConf: typeof config | null) {
+export interface ConvertResult {
+	/** Path of the generated .vlw file */
+	vlwPath: string;
+	/** Font size (px) the glyphs were rasterized at */
+	size: number;
+	/** Distance from the baseline to the top of the tallest glyph */
+	ascent: number;
+	/** Distance from the baseline to the bottom of the lowest-hanging glyph */
+	descent: number;
+	/** Horizontal advance of the space character, used since it has no bitmap */
+	spaceAdvance: number;
+	/** Per-glyph metrics for every character that was rasterized */
+	glyphs: VlwGlyph[];
+}
+
+function Convert(setConf: typeof config | null): ConvertResult {
 	if (!setConf) setConf = config;
 	const font = opentype.parse(
 		fs.readFileSync(setConf.fontFile).buffer as ArrayBuffer,
@@ -57,6 +72,9 @@ function Convert(setConf: typeof config | null) {
 	console.log(`Glyphs written              = ${glyphs.length}`);
 
 	const { ascent, descent } = ComputeAscentDescent(font, size);
+	// The space character (0x20) is excluded from the rasterized charset
+	// (it has no visible bitmap), so its advance is measured separately.
+	const spaceAdvance = RenderGlyph(font, 0x20, size)?.setWidth ?? Math.round(size / 3);
 	const name = font.names.fullName?.en ?? setConf.outputName;
 	const psname = font.names.postScriptName?.en ?? setConf.outputName;
 	const vlw = EncodeVlw(glyphs, size, ascent, descent, name, psname);
@@ -76,6 +94,8 @@ function Convert(setConf: typeof config | null) {
 		console.warn("Note: SPIFFS does not accept underscores in filenames.");
 
 	console.log("All done!");
+
+	return { vlwPath, size, ascent, descent, spaceAdvance, glyphs };
 }
 
 export default Convert;

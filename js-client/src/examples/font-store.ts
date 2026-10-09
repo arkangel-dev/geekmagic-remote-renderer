@@ -1,78 +1,11 @@
 import type { GeekMagicRenderer } from "@geekmagic-websocket/index.js";
 import Convert from "@geekmagic-websocket/font-converter/index.js";
 import { config as fontConverterConfig } from "@geekmagic-websocket/font-converter/default-config.js";
-import path from "node:path";
-import { existsSync } from "node:fs";
 
 interface LoadOptions {
 	renderer: GeekMagicRenderer;
 	fontFiles: string[];
 }
-
-// Here we are configuring the custom font. We need to specify
-// the footprint of the custom font on the display so that it can
-// be blitted correctly.
-// Note: Because of this only monospaced fonts are supported
-const fontStore: Record<string, (o: LoadOptions) => Promise<void>> = {
-	"MartianMono-Regular20": async (o: LoadOptions) => {
-		o.fontFiles.push("example_assets/MartianMono-Regular20.vlw");
-		o.renderer.FontBlitSettings.push({
-			vlwName: "MartianMono-Regular20",
-			baseBlitSize: {
-				width: 15,
-				height: 23,
-				top: -1,
-				left: -1,
-			},
-			spaceWidth: 5,
-			specialBlitSize: {},
-		});
-	},
-
-	"MartianMono-Regular25": async (o: LoadOptions) => {
-		o.fontFiles.push("example_assets/MartianMono-Regular25.vlw");
-		o.renderer.FontBlitSettings.push({
-			vlwName: "MartianMono-Regular25",
-			baseBlitSize: {
-				width: 19,
-				height: 26,
-				top: -1,
-				left: -1,
-			},
-			spaceWidth: 5,
-			specialBlitSize: {},
-		});
-	},
-
-	"JetBrainsMono-Regular50": async (o: LoadOptions) => {
-		o.fontFiles.push("example_assets/JetBrainsMono-Regular50.vlw");
-		o.renderer.FontBlitSettings.push({
-			vlwName: "JetBrainsMono-Regular50",
-			baseBlitSize: {
-				width: 28,
-				height: 44,
-				top: -1,
-				left: -1,
-			},
-			spaceWidth: 10,
-			specialBlitSize: {},
-		});
-	},
-
-	"SankofaDisplay-Regular50": async (o: LoadOptions) => {
-		o.fontFiles.push("example_assets/SankofaDisplay-Regular50.vlw");
-		o.renderer.FontBlitSettings.push({
-			vlwName: "SankofaDisplay-Regular50",
-			baseBlitSize: {
-				width: 38,
-				height: 66,
-				top: -5,
-				left: -2,
-			},
-			specialBlitSize: {},
-		});
-	},
-};
 
 export interface FontImportSettings {
 	/**
@@ -106,29 +39,42 @@ export async function LoadFontsAsync(
 	for (const font of fonts) {
 		const { fontPath, vlwName, fontSize, characterSetRange } = font;
 		const outputDir = fontConverterConfig.outputDir;
-		const vlwPath = path.join(outputDir, `${vlwName}.vlw`);
 
-		// Only (re)generate the vlw file if it doesn't already exist locally.
-		if (!existsSync(vlwPath)) {
-			// `BuildCharset` reads the character range directly off the shared
-			// `fontConverterConfig` singleton, so it must be mutated here rather
-			// than just passed through `Convert`'s `setConf` argument.
-			fontConverterConfig.unicodeBlocks = [characterSetRange];
-			fontConverterConfig.specificUnicodes = [];
-			Convert({
-				...fontConverterConfig,
-				fontFile: fontPath,
-				outputName: vlwName,
-				outputDir,
-				fontSize,
-				createPreview: false,
-			});
-		}
+		// `BuildCharset` reads the character range directly off the shared
+		// `fontConverterConfig` singleton, so it must be mutated here rather
+		// than just passed through `Convert`'s `setConf` argument.
+		fontConverterConfig.unicodeBlocks = [characterSetRange];
+		fontConverterConfig.specificUnicodes = [];
+		const converted = Convert({
+			...fontConverterConfig,
+			fontFile: fontPath,
+			outputName: vlwName,
+			outputDir,
+			fontSize,
+			createPreview: false,
+		});
 
-		loadOptions.fontFiles.push(vlwPath);
+		// Build the blit settings straight from the converter's glyph metrics
+		// instead of hand-tuning them per font. Every glyph's own advance width
+		// is recorded, so proportional (non-monospace) fonts measure and blit
+		// correctly instead of assuming a single fixed character width.
+		const glyphWidths: Record<number, number> = {};
+		for (const glyph of converted.glyphs) glyphWidths[glyph.value] = glyph.setWidth;
 
-		const loader = fontStore[`${vlwName}`];
-		if (loader) await loader(loadOptions);
+		renderer.FontBlitSettings.push({
+			vlwName,
+			baseBlitSize: {
+				// Fallback width for characters outside the requested range.
+				width: converted.spaceAdvance,
+				height: converted.ascent + converted.descent,
+				top: -1,
+				left: 0,
+			},
+			spaceWidth: 1,
+			glyphWidths,
+		});
+
+		loadOptions.fontFiles.push(converted.vlwPath);
 	}
 
 	const existingAssetsResponse = await renderer.ListAssetsAsync();
