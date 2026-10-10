@@ -19,7 +19,7 @@ function App() {
 
 			<TffFontText
 				fontPath={"example_assets/raw_fonts/Jaro.ttf"}
-				fontSize={50}
+				fontSize={40}
 				tb="text-[#0f2]"
 			>
 				Hi there!

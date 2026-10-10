@@ -45,30 +45,36 @@ export function useUploadAsset(options: { path: string }) {
 
 export function useGeekMagicContext() {
 	const context = useContext(geekMagicContext);
-	if (!context) {
+	if (!context)
 		throw new Error(
 			"useGeekMagicContext must be used within a GeekMagicContext.Provider",
 		);
-	}
 	return context;
 }
 
 export function useRenderer() {
 	const context = useContext(geekMagicContext);
-	if (!context) {
+	if (!context)
 		throw new Error(
 			"useRenderer must be used within a GeekMagicContext.Provider",
 		);
-	}
 	return context.renderer;
 }
 
 export function useIsAssetLoading() {
 	const context = useContext(geekMagicContext);
-	if (!context) {
+	if (!context)
 		throw new Error(
 			"useIsAssetLoading must be used within a GeekMagicContext.Provider",
 		);
-	}
 	return context.isAssetLoading;
+}
+
+export function useRequestFont() {
+	const context = useContext(geekMagicContext);
+	if (!context)
+		throw new Error(
+			"useRequestFont must be used within a GeekMagicContext.Provider",
+		);
+	return context.requestFont;
 }

@@ -8,8 +8,7 @@ import type {
 	TextProps,
 	TffFontTextProps,
 } from "./node-interfaces.js";
-import { useRenderer } from "./hooks.js";
-import { LoadFontsAsync } from "@geekmagic-websocket/font-manager.js";
+import { useRequestFont } from "./hooks.js";
 
 export function Box(props: BoxProps) {
 	return <baseBox {...props} />;
@@ -34,21 +33,17 @@ export function TffFontText(props: TffFontTextProps) {
 	const charRange = props.characterSetRange ?? [32, 126];
 	const charRangeString = charRange.join("-");
 	const vlwName = `${fontName}-${props.fontSize}-${charRangeString}`;
-	const renderer = useRenderer();
+	const requestFont = useRequestFont();
 	useEffect(() => {
 		let cancelled = false;
-		async function uploadFont() {
-			await LoadFontsAsync(renderer, [
-				{
-					fontPath: props.fontPath,
-					vlwName: vlwName,
-					fontSize: props.fontSize,
-					characterSetRange: charRange ?? [32, 126],
-				},
-			]);
-			setIsReady(true);
-		}
-		void uploadFont();
+		requestFont({
+			fontPath: props.fontPath,
+			vlwName: vlwName,
+			fontSize: props.fontSize,
+			characterSetRange: charRange ?? [32, 126],
+		}).then(() => {
+			if (!cancelled) setIsReady(true);
+		});
 		return () => {
 			cancelled = true;
 		};
