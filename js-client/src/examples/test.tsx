@@ -1,33 +1,41 @@
 import CreateRenderer from "@geekmagic-react/create-renderer.js";
-import { Box, FontText, Text } from "@geekmagic-react/elements.js";
-import { useUploadAsset } from "@geekmagic-react/hooks.js";
+import { Box, FontText, Text, TffFontText } from "@geekmagic-react/elements.js";
+import { useIsAssetLoading, useUploadAsset } from "@geekmagic-react/hooks.js";
 import { config } from "dotenv";
 
 function App() {
-	const assetUploadTask = useUploadAsset({
-		path: "example_assets/SankofaDisplay-Regular50.vlw",
-	});
-
-	if (!assetUploadTask.uploaded) {
-		return (
-			<Box tb="p-[20] flex items-center justify-center h-full">
-				<Text>Loading assets...</Text>
-			</Box>
-		);
-	}
+	const isLoading = useIsAssetLoading();
+	if (isLoading) return <></>;
 
 	return (
 		<Box tb="p-[20] flex items-center justify-center h-full">
-			<FontText vlw={"SankofaDisplay-Regular50"}>Hello World!</FontText>
+			<TffFontText
+				fontPath={"example_assets/raw_fonts/Final-Frontier.ttf"}
+				fontSize={50}
+				tb="text-[#ff0]"
+			>
+				Hi there!
+			</TffFontText>
+
+			<TffFontText
+				fontPath={"example_assets/raw_fonts/Jaro.ttf"}
+				fontSize={50}
+				tb="text-[#0f2]"
+			>
+				Hi there!
+			</TffFontText>
 		</Box>
 	);
 }
 
 config();
 
-const [_, render] = await CreateRenderer({
+const [renderer, render] = await CreateRenderer({
 	host: process.env.DISPLAY_ADDRESS as string,
 	port: 81,
 });
 
-render(<App />);
+renderer.WipeAssetsAsync().then(() => {
+	console.log("Assets wiped successfully.");
+	render(<App />);
+});

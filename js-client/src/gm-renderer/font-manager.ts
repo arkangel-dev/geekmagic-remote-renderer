@@ -1,6 +1,8 @@
 import type { GeekMagicRenderer } from "@geekmagic-websocket/index.js";
 import Convert from "@geekmagic-websocket/font-converter/index.js";
 import { config as fontConverterConfig } from "@geekmagic-websocket/font-converter/default-config.js";
+import { MaxTotalAssetSize } from "./consts.js";
+import { existsSync } from "node:fs";
 
 export interface FontLoadOptions {
 	renderer: GeekMagicRenderer;
@@ -82,15 +84,22 @@ export async function LoadFontsAsync(
 	// If any of them are missing, Wipe the existing
 	// assets and upload the required font files.
 	const existingAssetNames = existingAssetsResponse.map((x) => x.name);
+	const currentUsedSize = existingAssetsResponse.reduce(
+		(acc, asset) => acc + asset.size,
+		0,
+	);
+	if (currentUsedSize > MaxTotalAssetSize) {
+		await renderer.WipeAssetsAsync();
+	}
+
 	const missingFontFiles = loadOptions.fontFiles.filter(
 		(assetPath) => !existingAssetNames.includes(assetPath.split("/").pop()!),
 	);
-	// if (missingFontFiles.length > 0) {
-		await renderer.WipeAssetsAsync();
+	if (missingFontFiles.length > 0) {
 		for (const assetPath of loadOptions.fontFiles) {
 			process.stdout.write(`Uploading asset: ${assetPath}...`);
 			await renderer.UploadAssetAsync(assetPath);
 			process.stdout.write(` Done\n`);
 		}
-	// }
+	}
 }

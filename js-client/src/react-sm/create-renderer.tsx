@@ -14,6 +14,8 @@ interface AsyncLocalStorageType {
 
 export interface GeekMagicContextType {
 	renderer: GeekMagicRenderer;
+	isAssetLoading: boolean;
+	setIsAssetLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 // TODO: Stop using async local storage for the renderer context
@@ -67,14 +69,26 @@ export default async function CreateRenderer(props: {
 	const moddedCallback = (element: React.ReactNode) => {
 		asyncLocalStorage.run({ renderer }, () => {
 			root.render(
-				<geekMagicContext.Provider value={{ renderer }}>
-					<Box tb="bg-[#000] flex w-[240] h-[240]">
-						{element}
-					</Box>
-				</geekMagicContext.Provider>,
+				<StateInjector renderer={renderer}>
+					<Box tb="bg-[#000] flex w-[240] h-[240]">{element}</Box>
+				</StateInjector>,
 			);
 		});
 	};
 
 	return [renderer, moddedCallback] as const;
+}
+
+function StateInjector(props: {
+	renderer: GeekMagicRenderer;
+	children: React.ReactNode;
+}) {
+	const [isAssetLoading, setIsAssetLoading] = useState(false);
+	return (
+		<geekMagicContext.Provider
+			value={{ renderer: props.renderer, isAssetLoading, setIsAssetLoading }}
+		>
+			{props.children}
+		</geekMagicContext.Provider>
+	);
 }
