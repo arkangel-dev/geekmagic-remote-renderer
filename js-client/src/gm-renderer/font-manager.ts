@@ -1,8 +1,14 @@
-import type { GeekMagicRenderer } from "@geekmagic-websocket/index.js";
-import Convert from "@geekmagic-websocket/font-converter/index.js";
+import type {
+	GeekMagicRenderer,
+	FontBlitSetting,
+} from "@geekmagic-websocket/index.js";
+import Convert, {
+	type ConvertResult,
+} from "@geekmagic-websocket/font-converter/index.js";
 import { config as fontConverterConfig } from "@geekmagic-websocket/font-converter/default-config.js";
 import { MaxTotalAssetSize } from "./consts.js";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
 
 export interface FontLoadOptions {
 	renderer: GeekMagicRenderer;
@@ -30,6 +36,59 @@ export interface FontImportSettings {
 	characterSetRange: [number, number];
 }
 
+/**
+ * Derives the renderer's font blit metrics from the converter's raw glyph
+ * output, so proportional (non-monospace) fonts measure and blit correctly.
+ */
+function BuildFontBlitSetting(
+	vlwName: string,
+	converted: Pick<
+		ConvertResult,
+		"ascent" | "descent" | "spaceAdvance" | "glyphs"
+	>,
+): FontBlitSetting {
+	const glyphWidths: Record<number, number> = {};
+	for (const glyph of converted.glyphs)
+		glyphWidths[glyph.value] = glyph.setWidth;
+
+	return {
+		vlwName,
+		baseBlitSize: {
+			// Fallback width for characters outside the requested range.
+			width: converted.spaceAdvance,
+			height: converted.ascent + converted.descent,
+			top: 0,
+			left: 0,
+		},
+		spaceWidth: converted.spaceAdvance,
+		glyphWidths,
+	};
+}
+
+function GetBlitSettingsCachePath(outputDir: string, vlwName: string): string {
+	return path.join(outputDir, `${vlwName}.blit.json`);
+}
+
+/**
+ * Loads a previously cached FontBlitSetting for the given vlw, as long as
+ * both the cache file and the vlw file it describes still exist
+ */
+function LoadCachedBlitSetting(
+	vlwPath: string,
+	cachePath: string,
+): FontBlitSetting | null {
+	if (!existsSync(vlwPath) || !existsSync(cachePath)) return null;
+	try {
+		return JSON.parse(readFileSync(cachePath, "utf8")) as FontBlitSetting;
+	} catch {
+		return null;
+	}
+}
+
+function SaveBlitSettingCache(cachePath: string, blitSetting: FontBlitSetting) {
+	writeFileSync(cachePath, JSON.stringify(blitSetting));
+}
+
 export async function LoadFontsAsync(
 	renderer: GeekMagicRenderer,
 	fonts: FontImportSettings[],
@@ -41,6 +100,17 @@ export async function LoadFontsAsync(
 	for (const font of fonts) {
 		const { fontPath, vlwName, fontSize, characterSetRange } = font;
 		const outputDir = fontConverterConfig.outputDir;
+		const vlwPath = path.join(outputDir, `${vlwName}.vlw`);
+		const cachePath = GetBlitSettingsCachePath(outputDir, vlwName);
+
+		// Skip conversion entirely when the vlw and its cached blit metrics
+		// are already present, since re-rendering every glyph is expensive.
+		const cachedBlitSetting = LoadCachedBlitSetting(vlwPath, cachePath);
+		if (cachedBlitSetting) {
+			renderer.FontBlitSettings.push(cachedBlitSetting);
+			loadOptions.fontFiles.push(vlwPath);
+			continue;
+		}
 
 		// `BuildCharset` reads the character range directly off the shared
 		// `fontConverterConfig` singleton, so it must be mutated here rather
@@ -57,25 +127,10 @@ export async function LoadFontsAsync(
 		});
 
 		// Build the blit settings straight from the converter's glyph metrics
-		// instead of hand-tuning them per font. Every glyph's own advance width
-		// is recorded, so proportional (non-monospace) fonts measure and blit
-		// correctly instead of assuming a single fixed character width.
-		const glyphWidths: Record<number, number> = {};
-		for (const glyph of converted.glyphs)
-			glyphWidths[glyph.value] = glyph.setWidth;
-
-		renderer.FontBlitSettings.push({
-			vlwName,
-			baseBlitSize: {
-				// Fallback width for characters outside the requested range.
-				width: converted.spaceAdvance,
-				height: converted.ascent + converted.descent,
-				top: 0,
-				left: 0,
-			},
-			spaceWidth: converted.spaceAdvance,
-			glyphWidths,
-		});
+		// instead of hand-tuning them per font.
+		const blitSetting = BuildFontBlitSetting(vlwName, converted);
+		renderer.FontBlitSettings.push(blitSetting);
+		SaveBlitSettingCache(cachePath, blitSetting);
 
 		loadOptions.fontFiles.push(converted.vlwPath);
 	}

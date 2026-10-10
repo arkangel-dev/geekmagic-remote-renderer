@@ -35,7 +35,9 @@ const [renderer, render] = await CreateRenderer({
 	port: 81,
 });
 
-renderer.WipeAssetsAsync().then(() => {
-	console.log("Assets wiped successfully.");
-	render(<App />);
-});
+// renderer.WipeAssetsAsync().then(() => {
+// 	console.log("Assets wiped successfully.");
+
+// });
+
+render(<App />);
