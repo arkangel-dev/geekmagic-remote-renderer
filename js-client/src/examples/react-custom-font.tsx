@@ -2,7 +2,7 @@ import CreateRenderer from "@geekmagic-react/create-renderer.js";
 import { Box, Column, FontText } from "@geekmagic-react/elements.js";
 import { config } from "dotenv";
 import { useEffect, useState } from "react";
-import { LoadFontsAsync } from "./font-store.js";
+import { LoadFontsAsync } from "../gm-renderer/font-manager.js";
 
 /**
  * A simple React component demonstrating custom font usage.
@@ -44,13 +44,13 @@ function ReactCustomFontExample() {
 	return (
 		<Box tb="w-[240] h-[240] flex flex-row justify-center gap-[20] text-[#ff6464]">
 			<Column spacing={20} align="center" justify="center">
-				<FontText vlw="SankofaDisplay-Regular50">{numbers[0]}</FontText>
-				<FontText vlw="SankofaDisplay-Regular50">{numbers[1]}</FontText>
+				<FontText vlw="SankofaDisplay-Big">{numbers[0]}</FontText>
+				<FontText vlw="SankofaDisplay-Big">{numbers[1]}</FontText>
 			</Column>
 
 			<Column spacing={20} align="center" justify="center">
-				<FontText vlw="SankofaDisplay-Regular50">{numbers[2]}</FontText>
-				<FontText vlw="SankofaDisplay-Regular50">{numbers[3]}</FontText>
+				<FontText vlw="SankofaDisplay-Big">{numbers[2]}</FontText>
+				<FontText vlw="SankofaDisplay-Big">{numbers[3]}</FontText>
 			</Column>
 		</Box>
 	);
@@ -63,5 +63,12 @@ const [renderer, render] = await CreateRenderer({
 	port: 81,
 });
 
-await LoadFontsAsync(renderer, ["SankofaDisplay-Regular50"]);
+await LoadFontsAsync(renderer, [
+	{
+		fontPath: `example_assets/raw_fonts/SankofaDisplay-Regular.ttf`,
+		vlwName: "SankofaDisplay-Big",
+		fontSize: 80,
+		characterSetRange: [32, 126],
+	},
+]);
 render(<ReactCustomFontExample />);

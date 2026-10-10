@@ -1,8 +1,8 @@
 import CreateRenderer from "@geekmagic-react/create-renderer.js";
 import { Box, FontText } from "@geekmagic-react/elements.js";
+import { LoadFontsAsync } from "@geekmagic-websocket/font-manager.js";
 import { config } from "dotenv";
 import { useEffect, useMemo, useState } from "react";
-import { LoadFontsAsync } from "./font-store.js";
 
 // This is a font tester example. Define the font down here...
 const targetFont = "Jaro-Regular.ttf";
@@ -15,6 +15,9 @@ const secondWord = "Hi There!";
 // This will display a shade of purple as the blit background, making it
 // more visible. Once that's the case it will be easier to fine tune the
 // Blit settings in the font-store.ts file
+//
+// UPDATE: as of a20f347866eb4b3c2fb952e50db049a3e741eb71 font blitting parameter
+// description will be handled by font-manager helper class
 //
 // Happy rendering!
 

@@ -2,7 +2,7 @@ import type { GeekMagicRenderer } from "@geekmagic-websocket/index.js";
 import Convert from "@geekmagic-websocket/font-converter/index.js";
 import { config as fontConverterConfig } from "@geekmagic-websocket/font-converter/default-config.js";
 
-interface LoadOptions {
+export interface FontLoadOptions {
 	renderer: GeekMagicRenderer;
 	fontFiles: string[];
 }
@@ -32,7 +32,7 @@ export async function LoadFontsAsync(
 	renderer: GeekMagicRenderer,
 	fonts: FontImportSettings[],
 ) {
-	const loadOptions: LoadOptions = {
+	const loadOptions: FontLoadOptions = {
 		renderer,
 		fontFiles: [],
 	};
@@ -85,12 +85,12 @@ export async function LoadFontsAsync(
 	const missingFontFiles = loadOptions.fontFiles.filter(
 		(assetPath) => !existingAssetNames.includes(assetPath.split("/").pop()!),
 	);
-	if (missingFontFiles.length > 0) {
+	// if (missingFontFiles.length > 0) {
 		await renderer.WipeAssetsAsync();
 		for (const assetPath of loadOptions.fontFiles) {
 			process.stdout.write(`Uploading asset: ${assetPath}...`);
 			await renderer.UploadAssetAsync(assetPath);
 			process.stdout.write(` Done\n`);
 		}
-	}
+	// }
 }
