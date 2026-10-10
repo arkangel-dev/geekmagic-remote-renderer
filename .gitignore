@@ -4,3 +4,6 @@
 .vscode/launch.json
 .vscode/ipch
 __pycache__
+*.ttf
+*.vlw
+*.blit.json

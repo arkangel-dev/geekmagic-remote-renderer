@@ -34,13 +34,13 @@ export interface FontBlitSetting {
 		left?: number;
 	};
 	spaceWidth?: number;
-	specialBlitSize: Record<
-		string,
-		{
-			width: number;
-			height: number;
-		}
-	>;
+	/**
+	 * Per-character horizontal advance (in pixels), keyed by Unicode code point.
+	 * Populated dynamically from the font converter's glyph metrics so that
+	 * proportional (non-monospace) fonts measure and blit correctly. Characters
+	 * missing from this map fall back to `baseBlitSize.width`.
+	 */
+	glyphWidths: Record<number, number>;
 }
 
 export class GeekMagicRenderer {
@@ -67,8 +67,20 @@ export class GeekMagicRenderer {
 				height: 13,
 			},
 			vlwName: "undefined",
-			specialBlitSize: {},
+			glyphWidths: {},
 		} as FontBlitSetting;
+	}
+
+	/**
+	 * Returns the horizontal advance (in pixels) of a single character for the
+	 * given font, using the font's per-glyph metrics when available and
+	 * falling back to the font's base/space width otherwise.
+	 */
+	GetCharacterWidth(vlwName: string, char: string): number {
+		const blitSetting = this.GetFontBlitSetting(vlwName);
+		const codepoint = char.codePointAt(0) ?? 0;
+		if (/\s/.test(char)) return blitSetting.spaceWidth ?? blitSetting.baseBlitSize.width;
+		return blitSetting.glyphWidths[codepoint] ?? blitSetting.baseBlitSize.width;
 	}
 
 	/**

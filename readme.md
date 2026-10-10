@@ -1,21 +1,22 @@
+![](https://img.shields.io/badge/Current%20Build-1.0.0-green) ![](https://img.shields.io/badge/React-19.2.18-green?logo=react) 
 
-# 🐸 Geekmagic Remote Renderer
+![](./.readme-assets/banner.png)
+
+# Geekmagic Remote Renderer
 This is a custom firmware for the GeekMagic Display that accepts rendering instructions via a custom protocol. The idea being that you can easily and rapidly develop a UI without continuously sending over new firmware to the display.
 
-This combined with a custom react renderer, it lets you create a usable UI within minutes. Content is layouted to web standard (mostly) with the help of [Yoga Layout](https://www.yogalayout.dev) and state is fully managed by React. I was **heavily** inspired by the [Ink](https://github.com/vadimdemedes/ink) project to implement the react renderer
+This combined with a custom react renderer, it lets you create a usable UI within minutes. Content is layouted to web standard (mostly) with the help of [Yoga Layout](https://www.yogalayout.dev) and state is fully managed by React.
 
-![](./.readme-assets/header.png)
 
 ## Example 
 ```tsx
 import CreateRenderer from "@geekmagic-react/create-renderer.js";
-import { Box, Text } from "@geekmagic-react/elements.js";
+import { Box, Text, TtfText } from "@geekmagic-react/elements.js";
 import { config } from "dotenv";
 import { useEffect, useState } from "react";
 
 function App() {
 	const [seconds, setSeconds] = useState(0);
-
 	useEffect(() => {
 		const interval = setInterval(() => {
 			setSeconds((prev) => prev + 1);
@@ -24,9 +25,14 @@ function App() {
 	}, []);
 
 	return (
-		<Box tb="p-[20] flex items-center justify-center w-[240] h-[240]">
-			<Text>Hello World!</Text>
-			<Text>I've been up for {seconds} now</Text>
+		<Box tb="p-[20] flex items-center justify-center h-full gap-[5]">
+			<TtfText
+				fontPath={"example_assets/raw_fonts/MartianMono.ttf"}
+				fontSize={20}
+			>
+				Hello World
+			</TtfText>
+			<Text>I've been up for {seconds} seconds now</Text>
 		</Box>
 	);
 }
@@ -46,8 +52,6 @@ render(<App />);
 Right now you can just build it via [PlatformIO](https://platformio.org/install/ide?install=vscode) and send it over the ESP12F via a [CH343 board](https://www.waveshare.com/wiki/CH343_USB_UART_Board). You can get these for pretty cheap on Aliexpress. I'll work on an easier way to upload the firmware in the future
 
 ## Known Limitations & Bugs
-- [ ] Font rendering
-	- Fonts are loaded as .vlw files. And the glyph dimensions have to be explicitly specified so they can blitted properly during updates. And thanks to this fact only monospace fonts are properly supported right now
 - [ ] Images cannot be sent over the websocket. Right now images have to be pre-loaded along with files. I think I can live with that tho
 - [ ] Tailbreeze, the super simplified version of Tailwind I implemented has a lot of missing fields
 

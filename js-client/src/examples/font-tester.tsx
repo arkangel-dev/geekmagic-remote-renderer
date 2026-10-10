@@ -1,17 +1,23 @@
 import CreateRenderer from "@geekmagic-react/create-renderer.js";
-import { Box, FontText } from "@geekmagic-react/elements.js";
+import { Box, VlwText } from "@geekmagic-react/elements.js";
+import { LoadFontsAsync } from "@geekmagic-websocket/font-manager.js";
 import { config } from "dotenv";
 import { useEffect, useMemo, useState } from "react";
-import { LoadFontsAsync } from "./font-store.js";
 
 // This is a font tester example. Define the font down here...
-const targetFont = "MartianMono-Regular25";
-const secondWord = "HI THERE";
+const targetFont = "Jaro-Regular.ttf";
+const fontSize = 30;
+
+const vlwName = `${targetFont.split(".")[0]}-${fontSize}`;
+const secondWord = "Hi There!";
 
 // And then set the environment variable DEV_BLIT_MODE to true,
 // This will display a shade of purple as the blit background, making it
 // more visible. Once that's the case it will be easier to fine tune the
 // Blit settings in the font-store.ts file
+//
+// UPDATE: as of a20f347866eb4b3c2fb952e50db049a3e741eb71 font blitting parameter
+// description will be handled by font-manager helper class
 //
 // Happy rendering!
 
@@ -31,19 +37,19 @@ function GenericExample() {
 				() => letterList[Math.floor(Math.random() * letterList.length)],
 			).join("");
 			setRandomWord(randomWord);
-		}, 300);
+		}, 1000);
 		return () => clearInterval(interval);
 	}, []);
 
 	return (
 		<Box tb="w-[240] h-[240] p-[5]">
 			<Box tb="h-full w-full border-[#bb4d4d] items-center justify-center flex flex-col gap-[10]">
-				<FontText tb={`text-[${fontColor}]`} vlw={targetFont}>
+				<VlwText tb={`text-[${fontColor}]`} vlw={vlwName}>
 					{randomWord}
-				</FontText>
-				<FontText tb={`text-[${fontColor}]`} vlw={targetFont}>
+				</VlwText>
+				<VlwText tb={`text-[${fontColor}]`} vlw={vlwName}>
 					{secondWord}
-				</FontText>
+				</VlwText>
 			</Box>
 		</Box>
 	);
@@ -56,5 +62,12 @@ const [renderer, render] = await CreateRenderer({
 	port: 81,
 });
 
-await LoadFontsAsync(renderer, [targetFont]);
+await LoadFontsAsync(renderer, [
+	{
+		fontPath: `example_assets/raw_fonts/${targetFont}`,
+		vlwName,
+		fontSize,
+		characterSetRange: [32, 126],
+	},
+]);
 render(<GenericExample />);

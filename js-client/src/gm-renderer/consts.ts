@@ -53,4 +53,6 @@ const enum TextPositionDatum {
 	R_BASELINE = 11,
 }
 
-export { ParameterCodes, OperationCodes, TextPositionDatum };
+const MaxTotalAssetSize = 170000;
+
+export { ParameterCodes, OperationCodes, TextPositionDatum, MaxTotalAssetSize };

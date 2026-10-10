@@ -19,18 +19,25 @@ import { BuildCharset } from "./build-charset.js";
 import { EncodeVlw } from "./encode-vlw.js";
 import { ComputeAscentDescent, hex } from "./utils.js";
 
-const [argFile, argSize, argName] = process.argv.slice(2);
-if (argFile) config.fontFile = argFile;
-if (argSize) config.fontSize = parseInt(argSize, 10);
-if (argName) {
-	config.outputName = argName;
-	config.outputDir = path.dirname(argName);
-} else if (argFile)
-	config.outputName = path.basename(argFile).replace(/\.(ttf|otf)$/i, "");
+export interface ConvertResult {
+	/** Path of the generated .vlw file */
+	vlwPath: string;
+	/** Font size (px) the glyphs were rasterized at */
+	size: number;
+	/** Distance from the baseline to the top of the tallest glyph */
+	ascent: number;
+	/** Distance from the baseline to the bottom of the lowest-hanging glyph */
+	descent: number;
+	/** Horizontal advance of the space character, used since it has no bitmap */
+	spaceAdvance: number;
+	/** Per-glyph metrics for every character that was rasterized */
+	glyphs: VlwGlyph[];
+}
 
-function main() {
+function Convert(setConf: typeof config | null): ConvertResult {
+	if (!setConf) setConf = config;
 	const font = opentype.parse(
-		fs.readFileSync(config.fontFile).buffer as ArrayBuffer,
+		fs.readFileSync(setConf.fontFile).buffer as ArrayBuffer,
 	);
 	const charset = BuildCharset();
 	if (charset.length === 0)
@@ -38,13 +45,13 @@ function main() {
 
 	console.log("=====================");
 	console.log("Creating font file...");
-	console.log(`Unicode blocks included     = ${config.unicodeBlocks.length}`);
+	console.log(`Unicode blocks included     = ${setConf.unicodeBlocks.length}`);
 	console.log(
-		`Specific unicodes included  = ${config.specificUnicodes.length}`,
+		`Specific unicodes included  = ${setConf.specificUnicodes.length}`,
 	);
 	console.log(`Total characters requested  = ${charset.length}`);
 
-	const size = config.fontSize;
+	const size = setConf.fontSize;
 	const glyphs: VlwGlyph[] = [];
 	const missing: number[] = [];
 	for (const c of charset) {
@@ -65,13 +72,16 @@ function main() {
 	console.log(`Glyphs written              = ${glyphs.length}`);
 
 	const { ascent, descent } = ComputeAscentDescent(font, size);
-	const name = font.names.fullName?.en ?? config.outputName;
-	const psname = font.names.postScriptName?.en ?? config.outputName;
+	// The space character (0x20) is excluded from the rasterized charset
+	// (it has no visible bitmap), so its advance is measured separately.
+	const spaceAdvance = RenderGlyph(font, 0x20, size)?.setWidth ?? Math.round(size / 3);
+	const name = font.names.fullName?.en ?? setConf.outputName;
+	const psname = font.names.postScriptName?.en ?? setConf.outputName;
 	const vlw = EncodeVlw(glyphs, size, ascent, descent, name, psname);
 
-	fs.mkdirSync(config.outputDir, { recursive: true });
-	const base = `${config.outputName}-${size}`;
-	const vlwPath = path.join(config.outputDir, `${base}.vlw`);
+	fs.mkdirSync(setConf.outputDir, { recursive: true });
+	const base = setConf.outputName
+	const vlwPath = path.join(setConf.outputDir, `${base}.vlw`);
 	fs.writeFileSync(vlwPath, vlw);
 	console.log(`Saved ${vlwPath} (${vlw.length} bytes)`);
 
@@ -84,6 +94,8 @@ function main() {
 		console.warn("Note: SPIFFS does not accept underscores in filenames.");
 
 	console.log("All done!");
+
+	return { vlwPath, size, ascent, descent, spaceAdvance, glyphs };
 }
 
-main();
+export default Convert;

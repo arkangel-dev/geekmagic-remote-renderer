@@ -12,7 +12,7 @@ async function main() {
 	// Upload assets to the GeekMagic server before connecting
 	// Im doing it this way because I want the rendering to be an non async
 	// operation so I can hook it up to a custom react renderer
-	// await renderer.WipeAssetsAsync();
+	await renderer.WipeAssetsAsync();
 	const assets_response = await renderer.ListAssetsAsync();
 	const assets = assets_response.map((x) => x.name);
 	if (!assets.includes("tag-1.jpg"))

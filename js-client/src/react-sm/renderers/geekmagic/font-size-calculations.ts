@@ -11,6 +11,29 @@ export interface TextSize {
 	yOffset: number;
 }
 
+// Sums the actual per-character advance widths for a single line of text,
+// so proportional (non-monospace) fonts measure correctly.
+function measureLineWidth(line: string, vlw: string): number {
+	const renderer = GetRenderer();
+	let width = 0;
+	for (const char of line) width += renderer.GetCharacterWidth(vlw, char);
+	return width;
+}
+
+// Trims a line down to whatever fits within maxWidth, character by character,
+// used as a fallback when a single word is wider than the available space.
+function truncateToWidth(line: string, maxWidth: number, vlw: string): string {
+	const renderer = GetRenderer();
+	let width = 0;
+	let result = "";
+	for (const char of line) {
+		width += renderer.GetCharacterWidth(vlw, char);
+		if (width > maxWidth) break;
+		result += char;
+	}
+	return result;
+}
+
 // Splits text into the lines it would occupy when wrapped at word boundaries
 // within `maxWidth`, used to grow a wrapping text node's measured height.
 export function wrapTextLines(
@@ -18,19 +41,13 @@ export function wrapTextLines(
 	maxWidth: number,
 	vlw: string,
 ): string[] {
-	const renderer = GetRenderer();
-	const blitSetting = renderer.GetFontBlitSetting(vlw);
-	const maxChars = Math.max(
-		1,
-		Math.floor(maxWidth / blitSetting.baseBlitSize.width),
-	);
 	const lines: string[] = [];
 
 	for (const paragraph of text.split("\n")) {
 		let current = "";
 		for (const word of paragraph.split(" ")) {
 			const candidate = current ? `${current} ${word}` : word;
-			if (candidate.length > maxChars && current) {
+			if (measureLineWidth(candidate, vlw) > maxWidth && current) {
 				lines.push(current);
 				current = word;
 			} else {
@@ -40,7 +57,7 @@ export function wrapTextLines(
 		lines.push(current);
 	}
 
-	return lines.map((x) => x.substring(0, maxChars));
+	return lines.map((line) => truncateToWidth(line, maxWidth, vlw));
 }
 
 // Computes the datum-relative x/y offset for a text block of the given size.
@@ -111,14 +128,8 @@ export function calculateTextSize(
 }
 
 export function calculateTextWidth(text: string, vlw: string) {
-	const renderer = GetRenderer();
-	const blitSetting = renderer.GetFontBlitSetting(vlw);
-	if (blitSetting.spaceWidth) {
-		const spaceCount = (text.match(/\s/g) || []).length;
-		const textWithoutSpaces = text.replace(/\s+/g, "");
-		return textWithoutSpaces.length * blitSetting.baseBlitSize.width + spaceCount * blitSetting.spaceWidth;
-	}
-	return text.length * blitSetting.baseBlitSize.width;
+	const lines = text.split("\n");
+	return Math.max(...lines.map((line) => measureLineWidth(line, vlw)), 0);
 }
 
 /**
