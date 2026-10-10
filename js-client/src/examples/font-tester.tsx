@@ -1,5 +1,5 @@
 import CreateRenderer from "@geekmagic-react/create-renderer.js";
-import { Box, FontText } from "@geekmagic-react/elements.js";
+import { Box, VlwText } from "@geekmagic-react/elements.js";
 import { LoadFontsAsync } from "@geekmagic-websocket/font-manager.js";
 import { config } from "dotenv";
 import { useEffect, useMemo, useState } from "react";
@@ -44,12 +44,12 @@ function GenericExample() {
 	return (
 		<Box tb="w-[240] h-[240] p-[5]">
 			<Box tb="h-full w-full border-[#bb4d4d] items-center justify-center flex flex-col gap-[10]">
-				<FontText tb={`text-[${fontColor}]`} vlw={vlwName}>
+				<VlwText tb={`text-[${fontColor}]`} vlw={vlwName}>
 					{randomWord}
-				</FontText>
-				<FontText tb={`text-[${fontColor}]`} vlw={vlwName}>
+				</VlwText>
+				<VlwText tb={`text-[${fontColor}]`} vlw={vlwName}>
 					{secondWord}
-				</FontText>
+				</VlwText>
 			</Box>
 		</Box>
 	);

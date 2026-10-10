@@ -22,11 +22,12 @@ export function Text(props: TextProps) {
 	return <baseText {...props} />;
 }
 
-export function FontText(props: FontTextProps) {
+
+export function VlwText(props: FontTextProps) {
 	return <fontText {...props} />;
 }
 
-export function TffFontText(props: TffFontTextProps) {
+export function TtfText(props: TffFontTextProps) {
 	const [isReady, setIsReady] = useState(false);
 
 	const fontName = props.fontPath.split("/").pop()!.split(".")[0];

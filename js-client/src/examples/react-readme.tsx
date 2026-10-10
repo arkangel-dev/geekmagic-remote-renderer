@@ -1,11 +1,10 @@
 import CreateRenderer from "@geekmagic-react/create-renderer.js";
-import { Box, Text } from "@geekmagic-react/elements.js";
+import { Box, Text, TtfText } from "@geekmagic-react/elements.js";
 import { config } from "dotenv";
 import { useEffect, useState } from "react";
 
 function App() {
 	const [seconds, setSeconds] = useState(0);
-
 	useEffect(() => {
 		const interval = setInterval(() => {
 			setSeconds((prev) => prev + 1);
@@ -14,8 +13,13 @@ function App() {
 	}, []);
 
 	return (
-		<Box tb="p-[20] flex items-center justify-center w-[240] h-[240]">
-			<Text>Hello World!</Text>
+		<Box tb="p-[20] flex items-center justify-center h-full gap-[5]">
+			<TtfText
+				fontPath={"example_assets/raw_fonts/MartianMono.ttf"}
+				fontSize={20}
+			>
+				Hello World
+			</TtfText>
 			<Text>I've been up for {seconds} seconds now</Text>
 		</Box>
 	);

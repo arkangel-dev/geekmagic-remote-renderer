@@ -1,5 +1,5 @@
 import CreateRenderer from "@geekmagic-react/create-renderer.js";
-import { Box, Column, FontText } from "@geekmagic-react/elements.js";
+import { Box, Column, VlwText } from "@geekmagic-react/elements.js";
 import { config } from "dotenv";
 import { useEffect, useState } from "react";
 import { LoadFontsAsync } from "../gm-renderer/font-manager.js";
@@ -44,13 +44,13 @@ function ReactCustomFontExample() {
 	return (
 		<Box tb="w-[240] h-[240] flex flex-row justify-center gap-[20] text-[#ff6464]">
 			<Column spacing={20} align="center" justify="center">
-				<FontText vlw="SankofaDisplay-Big">{numbers[0]}</FontText>
-				<FontText vlw="SankofaDisplay-Big">{numbers[1]}</FontText>
+				<VlwText vlw="SankofaDisplay-Big">{numbers[0]}</VlwText>
+				<VlwText vlw="SankofaDisplay-Big">{numbers[1]}</VlwText>
 			</Column>
 
 			<Column spacing={20} align="center" justify="center">
-				<FontText vlw="SankofaDisplay-Big">{numbers[2]}</FontText>
-				<FontText vlw="SankofaDisplay-Big">{numbers[3]}</FontText>
+				<VlwText vlw="SankofaDisplay-Big">{numbers[2]}</VlwText>
+				<VlwText vlw="SankofaDisplay-Big">{numbers[3]}</VlwText>
 			</Column>
 		</Box>
 	);
