@@ -5,6 +5,7 @@ import type {
 	FontTextProps,
 	RowElementProps,
 	TextProps,
+	TffFontTextProps,
 } from "./node-interfaces.js";
 
 export function Box(props: BoxProps) {
@@ -21,6 +22,11 @@ export function Text(props: TextProps) {
 
 export function FontText(props: FontTextProps) {
 	return <fontText {...props} />;
+}
+
+export function TffFontText(props: TffFontTextProps) {
+	
+
 }
 
 export function Row(props: RowElementProps) {

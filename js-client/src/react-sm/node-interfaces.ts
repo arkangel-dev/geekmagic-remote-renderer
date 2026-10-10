@@ -56,6 +56,13 @@ export interface FontTextProps extends BaseGeekNode {
 	vlw?: string;
 }
 
+export interface TffFontTextProps extends BaseGeekNode {
+	children: ReactNode;
+	fontPath: string;
+	fontSize: number;
+	characterSetRange?: [number, number];
+}
+
 export interface HostNodeBase {
 	yogaNode?: YogaNode;
 	parentNode?: HostNode;

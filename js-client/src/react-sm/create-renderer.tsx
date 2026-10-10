@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { createRoot } from "./reconciler/renderer.js";
 import { GeekMagicRenderer } from "../gm-renderer/index.js";
 import { PrintTree } from "./renderers/console-out/index.js";
@@ -6,11 +6,18 @@ import Yoga from "yoga-layout";
 import type { HostRoot } from "./node-interfaces.js";
 import { RenderContent } from "./renderers/geekmagic/index.js";
 import { AsyncLocalStorage } from "node:async_hooks";
+import { Box } from "./elements.js";
 
 interface AsyncLocalStorageType {
 	renderer: GeekMagicRenderer;
 }
 
+export interface GeekMagicContextType {
+	renderer: GeekMagicRenderer;
+}
+
+// TODO: Stop using async local storage for the renderer context
+// and use React context instead
 export const asyncLocalStorage = new AsyncLocalStorage<AsyncLocalStorageType>();
 
 export function GetRenderer() {
@@ -20,6 +27,10 @@ export function GetRenderer() {
 	}
 	return store.renderer;
 }
+
+export const geekMagicContext = createContext<GeekMagicContextType | null>(
+	null,
+);
 
 export default async function CreateRenderer(props: {
 	host: string;
@@ -55,7 +66,13 @@ export default async function CreateRenderer(props: {
 
 	const moddedCallback = (element: React.ReactNode) => {
 		asyncLocalStorage.run({ renderer }, () => {
-			root.render(element);
+			root.render(
+				<geekMagicContext.Provider value={{ renderer }}>
+					<Box tb="bg-[#000] flex w-[240] h-[240]">
+						{element}
+					</Box>
+				</geekMagicContext.Provider>,
+			);
 		});
 	};
 
