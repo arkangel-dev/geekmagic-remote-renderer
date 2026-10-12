@@ -24,6 +24,8 @@ namespace RendererConsts
         OP_DRAW_SPRITE = 0x0B,
         OP_DRAW_DITHER_RECT = 0x0C,
         OP_DRAW_LFS_BITMAP = 0x0D,
+        REGISTER_GPIO_CALLBACK = 0x0E,
+        CLEAR_GPIO_CALLBACK = 0x0F
     };
 
     enum ParameterType : uint8_t
@@ -46,7 +48,8 @@ namespace RendererConsts
         PARAM_FILE_NAME = 0x10,
         PARAM_DITHER_COLOR = 0x11,
         PARAM_DITHER_SIZE = 0x12,
+        PIN_ID = 0x13,
 
-        PARAM_COUNT = 19
+        PARAM_COUNT = 20
     };
 }
