@@ -3,7 +3,7 @@
 
 void SetupRoute(const char *uri, HTTPMethod method, std::function<void(ESP8266WebServer &)> handler);
 void SetupUploadRoute(const char *uri, std::function<void(ESP8266WebServer &)> handler, std::function<void(ESP8266WebServer &)> uploadHandler);
-
+void SendWebsocketMessage(std::uint8_t operation, WebsocketMessageLine *messageLines, std::uint8_t messageLineCount);
 void SetupServer();
 
 extern ESP8266WebServer server;

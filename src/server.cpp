@@ -139,49 +139,93 @@ void SetupUploadRoute(const char *uri, std::function<void(ESP8266WebServer &)> h
   server.on(uri, HTTP_OPTIONS, HandleCorsPreflight);
 }
 
-
-
-void WebSocketEvent(
-	uint8_t client,
-	WStype_t type,
-	uint8_t *payload,
-	size_t length)
+struct WebsocketMessageLine
 {
-	switch (type)
-	{
-	case WStype_CONNECTED:
-		DebugLog.print(F("WebSocket client connected: "));
-		DebugLog.println(client);
-		break;
+  uint8_t parameterType;
+  uint8_t *parameterValue;
+  size_t parameterLength;
+};
 
-	case WStype_DISCONNECTED:
-		DebugLog.print(F("WebSocket client disconnected: "));
-		DebugLog.println(client);
-		break;
+/**
+ * Send out standard message to the client with an operation code
+ * and multiple message lines. Each message line can have a type,
+ * value and value length.
+ */
+void SendWebsocketMessage(std::uint8_t operation, WebsocketMessageLine *messageLines, std::uint8_t messageLineCount)
+{
+  size_t payloadLength = 5;
+  for (uint8_t i = 0; i < messageLineCount; i++)
+  {
+    if (messageLines[i].parameterLength > 65535)
+      return;
+    payloadLength += 3 + messageLines[i].parameterLength;
+  }
 
-	case WStype_BIN:
-    DebugLog.print(F("Heap before RenderContent: "));
-    DebugLog.println(ESP.getFreeHeap());  
-		if (!RenderContent(payload, length))
-		{
-			DebugLog.println(F("WebSocket: invalid render packet"));
+  std::vector<uint8_t> payload;
+  payload.reserve(payloadLength);
+  payload.push_back('G');
+  payload.push_back('M');
+  payload.push_back('P');
+  payload.push_back(operation);
+  payload.push_back(messageLineCount);
 
-			webSocket.sendTXT(
-				client,
-				"Invalid render packet");
+  for (uint8_t i = 0; i < messageLineCount; i++)
+  {
+    const WebsocketMessageLine &line = messageLines[i];
+    payload.push_back(line.parameterType);
+    payload.push_back(line.parameterLength & 0xFF);
+    payload.push_back((line.parameterLength >> 8) & 0xFF);
 
-			return;
-		}
-    DebugLog.print(F("Heap after RenderContent: "));
-    DebugLog.println(ESP.getFreeHeap());
-		webSocket.sendTXT(client, "OK");
-		break;
+    if (line.parameterLength > 0)
+      payload.insert(
+          payload.end(),
+          line.parameterValue,
+          line.parameterValue + line.parameterLength);
+  }
 
-	default:
-		break;
-	}
+  webSocket.broadcastBIN(payload.data(), payload.size());
 }
 
+void WebSocketEvent(
+    uint8_t client,
+    WStype_t type,
+    uint8_t *payload,
+    size_t length)
+{
+  switch (type)
+  {
+  case WStype_CONNECTED:
+    DebugLog.print(F("WebSocket client connected: "));
+    DebugLog.println(client);
+    break;
+
+  case WStype_DISCONNECTED:
+    DebugLog.print(F("WebSocket client disconnected: "));
+    DebugLog.println(client);
+    break;
+
+  case WStype_BIN:
+    DebugLog.print(F("Heap before RenderContent: "));
+    DebugLog.println(ESP.getFreeHeap());
+    if (!RenderContent(payload, length))
+    {
+      DebugLog.println(F("WebSocket: invalid render packet"));
+
+      webSocket.sendTXT(
+          client,
+          "Invalid render packet");
+
+      return;
+    }
+    DebugLog.print(F("Heap after RenderContent: "));
+    DebugLog.println(ESP.getFreeHeap());
+    webSocket.sendTXT(client, "OK");
+    break;
+
+  default:
+    break;
+  }
+}
 
 /**
  * Setup the HTTP server
