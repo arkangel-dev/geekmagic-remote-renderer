@@ -1,4 +1,4 @@
-import { OperationCodes, ParameterCodes } from "./consts.js";
+import { AuxParameterCodes, OperationCodes, ParameterCodes } from "./consts.js";
 import WebSocket from "ws";
 import { DebugPayload } from "./debugger.js";
 import type {
@@ -14,6 +14,7 @@ import type {
 	CreateSpriteData,
 	DrawBitmapData,
 	DrawDitherRectData,
+	RegisterPinStateChangeData,
 } from "./types.js";
 import { existsSync, readFile, readFileSync } from "node:fs";
 
@@ -79,7 +80,8 @@ export class GeekMagicRenderer {
 	GetCharacterWidth(vlwName: string, char: string): number {
 		const blitSetting = this.GetFontBlitSetting(vlwName);
 		const codepoint = char.codePointAt(0) ?? 0;
-		if (/\s/.test(char)) return blitSetting.spaceWidth ?? blitSetting.baseBlitSize.width;
+		if (/\s/.test(char))
+			return blitSetting.spaceWidth ?? blitSetting.baseBlitSize.width;
 		return blitSetting.glyphWidths[codepoint] ?? blitSetting.baseBlitSize.width;
 	}
 
@@ -113,8 +115,11 @@ export class GeekMagicRenderer {
 				this.paramU16(ParameterCodes.PARAM_Y, props.y),
 				this.paramU16(ParameterCodes.PARAM_WIDTH, props.width),
 				this.paramU16(ParameterCodes.PARAM_HEIGHT, props.height),
-				this.paramU16(ParameterCodes.DITHER_COLOR, this.rgb565(props.ditherColor)),
-				this.paramU16(ParameterCodes.DITHER_SIZE, props.ditherSize),
+				this.paramU16(
+					ParameterCodes.PARAM_DITHER_COLOR,
+					this.rgb565(props.ditherColor),
+				),
+				this.paramU16(ParameterCodes.PARAM_DITHER_SIZE, props.ditherSize),
 				this.paramU16(
 					ParameterCodes.PARAM_FILL_COLOR,
 					this.rgb565(props.color),
@@ -310,6 +315,36 @@ export class GeekMagicRenderer {
 	}
 
 	/**
+	 * Registers a callback for changes in the
+	 * state of a specified GPIO pin.
+	 */
+	RegisterPinStateChange(props: RegisterPinStateChangeData): GeekMagicRenderer {
+		this.operation_buffer.push(
+			Buffer.concat([
+				Buffer.from([OperationCodes.OP_REGISTER_GPIO_CALLBACK, 1]),
+				this.paramU16(ParameterCodes.PARAM_PIN_ID, props.pin),
+			]),
+		);
+		return this;
+	}
+
+	/**
+	 * Unregisters the callback for changes in the state
+	 * of a specified GPIO pin.
+	 */
+	UnregisterPinStateChange(
+		props: RegisterPinStateChangeData,
+	): GeekMagicRenderer {
+		this.operation_buffer.push(
+			Buffer.concat([
+				Buffer.from([OperationCodes.OP_CLEAR_GPIO_CALLBACK, 1]),
+				this.paramU16(ParameterCodes.PARAM_PIN_ID, props.pin),
+			]),
+		);
+		return this;
+	}
+
+	/**
 	 * Closes the WebSocket connection if it is open.
 	 * @returns A promise that resolves when the connection is closed.
 	 */
@@ -347,9 +382,18 @@ export class GeekMagicRenderer {
 				resolve();
 			};
 			this.websocket!.onerror = (error) => reject(error);
+			this.websocket!.onmessage = this.onWebsocket.bind(this);
 		});
 
 		return this;
+	}
+
+	/**
+	 * Handler for incoming WebSocket messages from the GeekMagic server.
+	 */
+	private onWebsocket(event: WebSocket.MessageEvent) {
+		const hex_data = Buffer.from(event.data as ArrayBuffer).toString("hex");
+		console.log("Received message from server (hex):", hex_data);
 	}
 
 	/**

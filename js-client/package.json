@@ -13,7 +13,8 @@
 		"example:react:readme": "pnpx tsx watch src/examples/react-readme.tsx",
 		"font:convert": "pnpx tsx src/gm-renderer/font-converter/index.ts",
 
-		"test": "pnpx tsx watch src/examples/test.tsx"
+		"test": "pnpx tsx watch src/examples/test.tsx",
+		"test-hardware": "pnpx tsx watch src/examples/test-hardware-interaction.ts"
 	},
 	"keywords": [],
 	"author": "",
