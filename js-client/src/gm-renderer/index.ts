@@ -1,6 +1,8 @@
-import { AuxParameterCodes, OperationCodes, ParameterCodes } from "./consts.js";
+import { AuxOperationCodes, OperationCodes, ParameterCodes } from "./consts.js";
 import WebSocket from "ws";
 import { DebugPayload } from "./debugger.js";
+import { parseResponse } from "./response_parsers.js";
+import type { ResponseDtoType } from "./response_dto.js";
 import type {
 	FillCircleData,
 	RectData,
@@ -15,6 +17,7 @@ import type {
 	DrawBitmapData,
 	DrawDitherRectData,
 	RegisterPinStateChangeData,
+	UnregisterPinStateChangeData,
 } from "./types.js";
 import { existsSync, readFile, readFileSync } from "node:fs";
 
@@ -47,6 +50,7 @@ export interface FontBlitSetting {
 export class GeekMagicRenderer {
 	private operation_buffer: Buffer[] = [];
 	private websocket: WebSocket | null = null;
+	private pinStateChangeCallbacks = new Map<number, (state: boolean) => void>();
 	private management_url: string | undefined;
 	FontBlitSettings: FontBlitSetting[] = [];
 
@@ -319,6 +323,7 @@ export class GeekMagicRenderer {
 	 * state of a specified GPIO pin.
 	 */
 	RegisterPinStateChange(props: RegisterPinStateChangeData): GeekMagicRenderer {
+		this.pinStateChangeCallbacks.set(props.pin, props.callback);
 		this.operation_buffer.push(
 			Buffer.concat([
 				Buffer.from([OperationCodes.OP_REGISTER_GPIO_CALLBACK, 1]),
@@ -333,8 +338,9 @@ export class GeekMagicRenderer {
 	 * of a specified GPIO pin.
 	 */
 	UnregisterPinStateChange(
-		props: RegisterPinStateChangeData,
+		props: UnregisterPinStateChangeData,
 	): GeekMagicRenderer {
+		this.pinStateChangeCallbacks.delete(props.pin);
 		this.operation_buffer.push(
 			Buffer.concat([
 				Buffer.from([OperationCodes.OP_CLEAR_GPIO_CALLBACK, 1]),
@@ -372,9 +378,7 @@ export class GeekMagicRenderer {
 		port: number,
 	): Promise<GeekMagicRenderer> {
 		this.websocket = new WebSocket(`ws://${address}:${port}`);
-		this.websocket.onmessage = (event) => {
-			// console.log("Received message from server:", event.data);
-		};
+		this.websocket.on("message", (data) => this.onWebsocketResponse(data));
 
 		await new Promise<void>((resolve, reject) => {
 			this.websocket!.onopen = () => {
@@ -382,7 +386,6 @@ export class GeekMagicRenderer {
 				resolve();
 			};
 			this.websocket!.onerror = (error) => reject(error);
-			this.websocket!.onmessage = this.onWebsocket.bind(this);
 		});
 
 		return this;
@@ -391,9 +394,22 @@ export class GeekMagicRenderer {
 	/**
 	 * Handler for incoming WebSocket messages from the GeekMagic server.
 	 */
-	private onWebsocket(event: WebSocket.MessageEvent) {
-		const hex_data = Buffer.from(event.data as ArrayBuffer).toString("hex");
-		console.log("Received message from server (hex):", hex_data);
+	private onWebsocketResponse(data: WebSocket.Data) {
+		if (typeof data === "string") return;
+
+		const payload = Array.isArray(data)
+			? Buffer.concat(data)
+			: Buffer.isBuffer(data)
+				? data
+				: Buffer.from(data);
+		const response = parseResponse(payload);
+		if (!response) return;
+
+		switch (response.messageType) {
+			case AuxOperationCodes.OP_PIN_STATE_CHANGE:
+				this.pinStateChangeCallbacks.get(response.pin)?.(response.state);
+				break;
+		}
 	}
 
 	/**

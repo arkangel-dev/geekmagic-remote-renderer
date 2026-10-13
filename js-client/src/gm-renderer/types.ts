@@ -72,4 +72,9 @@ export interface DrawBitmapData extends PositionData, SizeData {
 
 export interface RegisterPinStateChangeData {
 	pin: number;
+	callback: (state: boolean) => void;
+}
+
+export interface UnregisterPinStateChangeData {
+	pin: number;
 }

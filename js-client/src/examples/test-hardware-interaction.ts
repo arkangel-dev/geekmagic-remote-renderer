@@ -12,13 +12,11 @@ async function main() {
 	// Connect to the websocket
 	await renderer.ConnectAsync(displayAddress, 81);
 
-	renderer.RegisterPinStateChange({ pin: 10 });
-    renderer.Send()
+	renderer.RegisterPinStateChange({
+		pin: 10,
+		callback: (state) => console.log(`GPIO 10 state: ${state}`),
+	});
+	renderer.Send();
 	console.log("Done...");
-
-
-    while (true) {
-        await new Promise(resolve => setTimeout(resolve, 250));
-    }
 }
 main();
