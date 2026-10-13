@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { geekMagicContext } from "./create-renderer.js";
 
 export interface UseUploadAssetResult {
@@ -84,16 +84,20 @@ export function usePinBinaryState(
 	pin: number,
 ) {
 	const ctx = useGeekMagicContext();
+	// Keep the latest callback in a ref so an inline callback doesn't
+	// unregister/re-register the pin on every render.
+	const callbackRef = useRef(callback);
+	callbackRef.current = callback;
+
 	useEffect(() => {
-		const callbackWrapper = (state: boolean) => {
-			callback(state);
-		};
-		ctx.renderer.RegisterPinStateChange({
-			pin,
-			callback: callbackWrapper,
-		});
+		ctx.renderer
+			.RegisterPinStateChange({
+				pin,
+				callback: (state) => callbackRef.current(state),
+			})
+			.Send();
 		return () => {
-			ctx.renderer.UnregisterPinStateChange({ pin: pin });
+			ctx.renderer.UnregisterPinStateChange({ pin }).Send();
 		};
-	}, [ctx, callback, pin]);
+	}, [ctx.renderer, pin]);
 }
