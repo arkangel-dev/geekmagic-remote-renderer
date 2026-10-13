@@ -90,14 +90,32 @@ export function usePinBinaryState(
 	callbackRef.current = callback;
 
 	useEffect(() => {
-		ctx.renderer
-			.RegisterPinStateChange({
-				pin,
-				callback: (state) => callbackRef.current(state),
-			})
-			.Send();
+		const listener = (state: boolean) => callbackRef.current(state);
+		ctx.renderer.RegisterPinStateChange({ pin, callback: listener }).Send();
 		return () => {
-			ctx.renderer.UnregisterPinStateChange({ pin }).Send();
+			ctx.renderer
+				.UnregisterPinStateChange({ pin, callback: listener })
+				.Send();
 		};
 	}, [ctx.renderer, pin]);
+}
+
+export function usePinLongPress(
+	callback: () => void,
+	pin: number,
+	duration: number = 1000,
+) {
+	const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
+	return usePinBinaryState((state) => {
+		const pressed = !state;
+		if (pressed) {
+			longPressTimeout.current = setTimeout(() => {
+				callback();
+				longPressTimeout.current = null;
+			}, duration);
+		} else if (longPressTimeout.current) {
+			clearTimeout(longPressTimeout.current);
+			longPressTimeout.current = null;
+		}
+	}, pin);
 }

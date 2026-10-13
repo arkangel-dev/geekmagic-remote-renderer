@@ -50,7 +50,10 @@ export interface FontBlitSetting {
 export class GeekMagicRenderer {
 	private operation_buffer: Buffer[] = [];
 	private websocket: WebSocket | null = null;
-	private pinStateChangeCallbacks = new Map<number, (state: boolean) => void>();
+	private pinStateChangeCallbacks = new Map<
+		number,
+		Set<(state: boolean) => void>
+	>();
 	private management_url: string | undefined;
 	FontBlitSettings: FontBlitSetting[] = [];
 
@@ -323,7 +326,14 @@ export class GeekMagicRenderer {
 	 * state of a specified GPIO pin.
 	 */
 	RegisterPinStateChange(props: RegisterPinStateChangeData): GeekMagicRenderer {
-		this.pinStateChangeCallbacks.set(props.pin, props.callback);
+		let callbacks = this.pinStateChangeCallbacks.get(props.pin);
+		if (!callbacks) {
+			callbacks = new Set();
+			this.pinStateChangeCallbacks.set(props.pin, callbacks);
+		}
+		callbacks.add(props.callback);
+		// The device only needs to be told about the first listener
+		if (callbacks.size > 1) return this;
 		this.operation_buffer.push(
 			Buffer.concat([
 				Buffer.from([OperationCodes.OP_REGISTER_GPIO_CALLBACK, 1]),
@@ -340,6 +350,12 @@ export class GeekMagicRenderer {
 	UnregisterPinStateChange(
 		props: UnregisterPinStateChangeData,
 	): GeekMagicRenderer {
+		const callbacks = this.pinStateChangeCallbacks.get(props.pin);
+		if (callbacks && props.callback) {
+			callbacks.delete(props.callback);
+			// Other listeners still need the pin registered on the device
+			if (callbacks.size > 0) return this;
+		}
 		this.pinStateChangeCallbacks.delete(props.pin);
 		this.operation_buffer.push(
 			Buffer.concat([
@@ -407,7 +423,9 @@ export class GeekMagicRenderer {
 
 		switch (response.messageType) {
 			case AuxOperationCodes.OP_PIN_STATE_CHANGE:
-				this.pinStateChangeCallbacks.get(response.pin)?.(response.state);
+				this.pinStateChangeCallbacks
+					.get(response.pin)
+					?.forEach((cb) => cb(response.state));
 				break;
 		}
 	}
@@ -419,6 +437,7 @@ export class GeekMagicRenderer {
 	Send() {
 		if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN)
 			throw new Error("WebSocket is not connected or not open");
+		if (this.operation_buffer.length === 0) return this;
 		const payload = this.buildPayload();
 		this.websocket.send(payload);
 		this.operation_buffer = [];

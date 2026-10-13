@@ -77,4 +77,5 @@ export interface RegisterPinStateChangeData {
 
 export interface UnregisterPinStateChangeData {
 	pin: number;
+	callback?: (state: boolean) => void;
 }
