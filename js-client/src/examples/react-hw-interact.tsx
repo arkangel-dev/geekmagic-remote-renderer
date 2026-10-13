@@ -2,7 +2,7 @@ import CreateRenderer from "@geekmagic-react/create-renderer.js";
 import { Box, TtfText } from "@geekmagic-react/elements.js";
 import { usePinBinaryState, usePinLongPress } from "@geekmagic-react/hooks.js";
 import { config } from "dotenv";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 function App() {
 	const [count, setCount] = useState(0);
@@ -14,7 +14,7 @@ function App() {
 		<Box tb={"p-[20] flex items-center justify-center h-full"}>
 			<TtfText
 				fontPath={"./example_assets/raw_fonts/SankofaDisplay.ttf"}
-				fontSize={80}
+				fontSize={120}
 			>
 				{count}
 			</TtfText>
@@ -23,7 +23,7 @@ function App() {
 }
 
 config();
-const [renderer, render] = await CreateRenderer({
+const [_, render] = await CreateRenderer({
 	host: process.env.DISPLAY_ADDRESS as string,
 	port: 81,
 });
