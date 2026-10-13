@@ -139,13 +139,6 @@ void SetupUploadRoute(const char *uri, std::function<void(ESP8266WebServer &)> h
   server.on(uri, HTTP_OPTIONS, HandleCorsPreflight);
 }
 
-struct WebsocketMessageLine
-{
-  uint8_t parameterType;
-  uint8_t *parameterValue;
-  size_t parameterLength;
-};
-
 /**
  * Send out standard message to the client with an operation code
  * and multiple message lines. Each message line can have a type,

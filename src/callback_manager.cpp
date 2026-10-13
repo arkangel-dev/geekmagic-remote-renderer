@@ -1,5 +1,8 @@
 #include <cstdint> 
 #include <Arduino.h>
+#include "callback_manager.h"
+#include "server.h"
+#include <server-opcodes.h>
 
 
 // Array to monitor which pins are
@@ -38,7 +41,26 @@ void UnregisterCallbackPin(std::uint8_t gpioPin) {
  * Sends the state change of a GPIO pin to the websocket
  */
 void SendCallbackStateChange(std::uint8_t gpioPin, bool state) {
+    std::uint8_t pinValue = gpioPin;
+    std::uint8_t stateValue = state ? 1 : 0;
+    WebsocketMessageLine messageLines[] = {
+        {
+            ServerClientConsts::PARAM_PIN_ID,
+            &pinValue,
+            sizeof(pinValue)
+        },
+        {
+            ServerClientConsts::PARAM_PIN_STATE,
+            &stateValue,
+            sizeof(stateValue)
+        }
+    };
 
+    SendWebsocketMessage(
+        ServerClientConsts::OP_PIN_STATE_CHANGE,
+        messageLines,
+        sizeof(messageLines) / sizeof(messageLines[0])
+    );
 }
 
 /**

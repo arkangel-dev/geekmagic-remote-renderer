@@ -6,6 +6,7 @@
 #include <remote_updates.h>
 #include <ArduinoOTA.h>
 #include <debugging.h>
+#include "callback_manager.h"
 // int buttonPin = 10; // GPIO4 = physical pin 19 on the ESP-12 module
 void setup()
 {
@@ -57,5 +58,6 @@ void loop()
 	server.handleClient();
 	webSocket.loop();
 	ArduinoOTA.handle();
+	TickCallbackActivity();
 	// delay(100);
 }
