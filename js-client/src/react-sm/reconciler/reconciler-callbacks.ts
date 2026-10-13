@@ -72,8 +72,10 @@ export function updateTextMeasure(node: HostNode): void {
 	const style = node.style as Styles | undefined;
 	const canWrap = style?.textWrap === "wrap" || style?.textWrap === "hard";
 	const vlw = node.props.vlw as string;
-	const blitSetting = GetRenderer().GetFontBlitSetting(vlw);
 	node.yogaNode.setMeasureFunc((width, widthMode) => {
+		const renderer = GetRenderer();
+		const blitSetting = renderer.GetFontBlitSetting(vlw);
+
 		// Only wrap once Yoga has resolved an actual width constraint for this node
 		// (from its own width style or the parent's layout); otherwise measure as one line.
 		if (canWrap && widthMode !== Yoga.MEASURE_MODE_UNDEFINED && width > 0) {
