@@ -78,3 +78,22 @@ export function useRequestFont() {
 		);
 	return context.requestFont;
 }
+
+export function usePinBinaryState(
+	callback: (state: boolean) => void,
+	pin: number,
+) {
+	const ctx = useGeekMagicContext();
+	useEffect(() => {
+		const callbackWrapper = (state: boolean) => {
+			callback(state);
+		};
+		ctx.renderer.RegisterPinStateChange({
+			pin,
+			callback: callbackWrapper,
+		});
+		return () => {
+			ctx.renderer.UnregisterPinStateChange({ pin: pin });
+		};
+	}, [ctx, callback, pin]);
+}
