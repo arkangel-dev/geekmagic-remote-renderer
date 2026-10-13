@@ -69,3 +69,13 @@ export interface DrawSpriteData extends SpriteBase, PositionData {}
 export interface DrawBitmapData extends PositionData, SizeData {
 	file: string;
 }
+
+export interface RegisterPinStateChangeData {
+	pin: number;
+	callback: (state: boolean) => void;
+}
+
+export interface UnregisterPinStateChangeData {
+	pin: number;
+	callback?: (state: boolean) => void;
+}

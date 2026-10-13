@@ -78,7 +78,10 @@ export default async function CreateRenderer(props: {
 		.Send();
 
 	const root = createRoot(container, () => {
-		RenderContent(container, renderer);
+		// This is needed for making sure that renderer 
+		// is available for when commits are triggered via 
+		// state updates from the box
+		asyncLocalStorage.run({ renderer }, () => RenderContent(container, renderer));
 		// console.log(PrintTree(container));
 	});
 

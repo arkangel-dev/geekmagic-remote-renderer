@@ -6,8 +6,7 @@ namespace RendererConsts
 {
     static constexpr uint16_t WIDTH = 240;
     static constexpr uint16_t HEIGHT = 240;
-
-    constexpr uint16_t MAX_SPRITES = 256;
+    static constexpr uint16_t MAX_SPRITES = 256;
 
     enum OpType : uint8_t
     {
@@ -24,6 +23,8 @@ namespace RendererConsts
         OP_DRAW_SPRITE = 0x0B,
         OP_DRAW_DITHER_RECT = 0x0C,
         OP_DRAW_LFS_BITMAP = 0x0D,
+        OP_REGISTER_GPIO_CALLBACK = 0x0E,
+        OP_CLEAR_GPIO_CALLBACK = 0x0F
     };
 
     enum ParameterType : uint8_t
@@ -46,7 +47,8 @@ namespace RendererConsts
         PARAM_FILE_NAME = 0x10,
         PARAM_DITHER_COLOR = 0x11,
         PARAM_DITHER_SIZE = 0x12,
+        PARAM_PIN_ID = 0x13,
 
-        PARAM_COUNT = 19
+        PARAM_COUNT = 20
     };
 }

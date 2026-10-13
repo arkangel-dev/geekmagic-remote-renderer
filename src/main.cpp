@@ -6,10 +6,10 @@
 #include <remote_updates.h>
 #include <ArduinoOTA.h>
 #include <debugging.h>
-
+#include "callback_manager.h"
+// int buttonPin = 10; // GPIO4 = physical pin 19 on the ESP-12 module
 void setup()
 {
-
 	DebugLog.println("Initializing LittleFS...");
 	if (!LittleFS.begin())
 	{
@@ -20,6 +20,7 @@ void setup()
 	Serial.begin(115200);
 	Serial.println();
 	InitDisplay();
+	// pinMode(buttonPin, INPUT_PULLUP);
 
 	DebugLog.println("LittleFS Initialized...");
 
@@ -40,9 +41,23 @@ void setup()
 	}
 }
 
+// int previousState = HIGH;
 void loop()
 {
+	// previousState = digitalRead(buttonPin);
+	// int currentButtonState = digitalRead(buttonPin);
+	// Serial.println(currentButtonState);
+	// int currentButtonState = digitalRead(buttonPin);
+	// DebugLog.clearBuffer();
+	// DebugLog.println("Current button state: " + String(currentButtonState));
+	// if (previousState != currentButtonState)
+	// {
+	// 	DebugLog.println("Button state changed: " + String(currentButtonState));
+	// }
+	// previousState = currentButtonState;
 	server.handleClient();
 	webSocket.loop();
 	ArduinoOTA.handle();
+	TickCallbackActivity();
+	// delay(100);
 }

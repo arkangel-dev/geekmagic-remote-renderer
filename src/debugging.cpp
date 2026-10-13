@@ -110,6 +110,8 @@ const String& DebugSerial::getBuffer() const {
 // Clear the buffer
 void DebugSerial::clearBuffer() {
     buffer = "";
+    tft.fillScreen(TFT_BLACK);
+    tft.setCursor(0, 0);
 }
 
 // Get last N lines

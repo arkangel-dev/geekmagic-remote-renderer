@@ -1,4 +1,4 @@
-const enum ParameterCodes {
+const enum RenderParameterCodes {
 	PARAM_X = 0x01,
 	PARAM_Y = 0x02,
 	PARAM_WIDTH = 0x03,
@@ -15,11 +15,12 @@ const enum ParameterCodes {
 	PARAM_SPRITE_ID = 0x0e,
 	PARAM_IMAGE_DATA = 0x0f,
 	PARAM_FILENAME = 0x10,
-	DITHER_COLOR = 0x11,
-	DITHER_SIZE = 0x12,
+	PARAM_DITHER_COLOR = 0x11,
+	PARAM_DITHER_SIZE = 0x12,
+	PARAM_PIN_ID = 0x013,
 }
 
-const enum OperationCodes {
+const enum RenderingOperationCodes {
 	OP_FILL_RECT = 0x01,
 	OP_DRAW_RECT = 0x02,
 	OP_DRAW_CIRCLE = 0x03,
@@ -33,6 +34,17 @@ const enum OperationCodes {
 	OP_DRAW_SPRITE = 0x0b,
 	OP_FILL_DITHER_RECT = 0x0c,
 	OP_DRAW_LFS_BITMAP = 0x0d,
+	OP_REGISTER_GPIO_CALLBACK = 0x0e,
+	OP_CLEAR_GPIO_CALLBACK = 0x0f,
+}
+
+const enum AuxParameterCodes {
+	PARAM_PIN_ID = 0x01,
+	PARAM_PIN_STATE = 0x02,
+}
+
+const enum AuxOperationCodes {
+	OP_PIN_STATE_CHANGE = 0x01,
 }
 
 const enum TextPositionDatum {
@@ -55,4 +67,11 @@ const enum TextPositionDatum {
 
 const MaxTotalAssetSize = 170000;
 
-export { ParameterCodes, OperationCodes, TextPositionDatum, MaxTotalAssetSize };
+export {
+	RenderParameterCodes as ParameterCodes,
+	RenderingOperationCodes as OperationCodes,
+	TextPositionDatum,
+	MaxTotalAssetSize,
+	AuxParameterCodes,
+	AuxOperationCodes,
+};

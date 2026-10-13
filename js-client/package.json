@@ -11,9 +11,8 @@
 		"example:react:gitlab": "pnpx tsx watch src/examples/react-gitlab-status.tsx",
 		"example:react:fonttest": "pnpx tsx watch src/examples/font-tester.tsx",
 		"example:react:readme": "pnpx tsx watch src/examples/react-readme.tsx",
-		"font:convert": "pnpx tsx src/gm-renderer/font-converter/index.ts",
-
-		"test": "pnpx tsx watch src/examples/test.tsx"
+		"example:react:hw": "pnpx tsx watch src/examples/react-hw-interact.tsx",
+		"font:convert": "pnpx tsx src/gm-renderer/font-converter/index.ts"
 	},
 	"keywords": [],
 	"author": "",

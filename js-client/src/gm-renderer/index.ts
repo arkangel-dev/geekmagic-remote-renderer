@@ -1,6 +1,8 @@
-import { OperationCodes, ParameterCodes } from "./consts.js";
+import { AuxOperationCodes, OperationCodes, ParameterCodes } from "./consts.js";
 import WebSocket from "ws";
 import { DebugPayload } from "./debugger.js";
+import { parseResponse } from "./response_parsers.js";
+import type { ResponseDtoType } from "./response_dto.js";
 import type {
 	FillCircleData,
 	RectData,
@@ -14,6 +16,8 @@ import type {
 	CreateSpriteData,
 	DrawBitmapData,
 	DrawDitherRectData,
+	RegisterPinStateChangeData,
+	UnregisterPinStateChangeData,
 } from "./types.js";
 import { existsSync, readFile, readFileSync } from "node:fs";
 
@@ -46,6 +50,10 @@ export interface FontBlitSetting {
 export class GeekMagicRenderer {
 	private operation_buffer: Buffer[] = [];
 	private websocket: WebSocket | null = null;
+	private pinStateChangeCallbacks = new Map<
+		number,
+		Set<(state: boolean) => void>
+	>();
 	private management_url: string | undefined;
 	FontBlitSettings: FontBlitSetting[] = [];
 
@@ -79,7 +87,8 @@ export class GeekMagicRenderer {
 	GetCharacterWidth(vlwName: string, char: string): number {
 		const blitSetting = this.GetFontBlitSetting(vlwName);
 		const codepoint = char.codePointAt(0) ?? 0;
-		if (/\s/.test(char)) return blitSetting.spaceWidth ?? blitSetting.baseBlitSize.width;
+		if (/\s/.test(char))
+			return blitSetting.spaceWidth ?? blitSetting.baseBlitSize.width;
 		return blitSetting.glyphWidths[codepoint] ?? blitSetting.baseBlitSize.width;
 	}
 
@@ -113,8 +122,11 @@ export class GeekMagicRenderer {
 				this.paramU16(ParameterCodes.PARAM_Y, props.y),
 				this.paramU16(ParameterCodes.PARAM_WIDTH, props.width),
 				this.paramU16(ParameterCodes.PARAM_HEIGHT, props.height),
-				this.paramU16(ParameterCodes.DITHER_COLOR, this.rgb565(props.ditherColor)),
-				this.paramU16(ParameterCodes.DITHER_SIZE, props.ditherSize),
+				this.paramU16(
+					ParameterCodes.PARAM_DITHER_COLOR,
+					this.rgb565(props.ditherColor),
+				),
+				this.paramU16(ParameterCodes.PARAM_DITHER_SIZE, props.ditherSize),
 				this.paramU16(
 					ParameterCodes.PARAM_FILL_COLOR,
 					this.rgb565(props.color),
@@ -310,6 +322,51 @@ export class GeekMagicRenderer {
 	}
 
 	/**
+	 * Registers a callback for changes in the
+	 * state of a specified GPIO pin.
+	 */
+	RegisterPinStateChange(props: RegisterPinStateChangeData): GeekMagicRenderer {
+		let callbacks = this.pinStateChangeCallbacks.get(props.pin);
+		if (!callbacks) {
+			callbacks = new Set();
+			this.pinStateChangeCallbacks.set(props.pin, callbacks);
+		}
+		callbacks.add(props.callback);
+		// The device only needs to be told about the first listener
+		if (callbacks.size > 1) return this;
+		this.operation_buffer.push(
+			Buffer.concat([
+				Buffer.from([OperationCodes.OP_REGISTER_GPIO_CALLBACK, 1]),
+				this.paramU16(ParameterCodes.PARAM_PIN_ID, props.pin),
+			]),
+		);
+		return this;
+	}
+
+	/**
+	 * Unregisters the callback for changes in the state
+	 * of a specified GPIO pin.
+	 */
+	UnregisterPinStateChange(
+		props: UnregisterPinStateChangeData,
+	): GeekMagicRenderer {
+		const callbacks = this.pinStateChangeCallbacks.get(props.pin);
+		if (callbacks && props.callback) {
+			callbacks.delete(props.callback);
+			// Other listeners still need the pin registered on the device
+			if (callbacks.size > 0) return this;
+		}
+		this.pinStateChangeCallbacks.delete(props.pin);
+		this.operation_buffer.push(
+			Buffer.concat([
+				Buffer.from([OperationCodes.OP_CLEAR_GPIO_CALLBACK, 1]),
+				this.paramU16(ParameterCodes.PARAM_PIN_ID, props.pin),
+			]),
+		);
+		return this;
+	}
+
+	/**
 	 * Closes the WebSocket connection if it is open.
 	 * @returns A promise that resolves when the connection is closed.
 	 */
@@ -337,9 +394,7 @@ export class GeekMagicRenderer {
 		port: number,
 	): Promise<GeekMagicRenderer> {
 		this.websocket = new WebSocket(`ws://${address}:${port}`);
-		this.websocket.onmessage = (event) => {
-			// console.log("Received message from server:", event.data);
-		};
+		this.websocket.on("message", (data) => this.onWebsocketResponse(data));
 
 		await new Promise<void>((resolve, reject) => {
 			this.websocket!.onopen = () => {
@@ -353,12 +408,36 @@ export class GeekMagicRenderer {
 	}
 
 	/**
+	 * Handler for incoming WebSocket messages from the GeekMagic server.
+	 */
+	private onWebsocketResponse(data: WebSocket.Data) {
+		if (typeof data === "string") return;
+
+		const payload = Array.isArray(data)
+			? Buffer.concat(data)
+			: Buffer.isBuffer(data)
+				? data
+				: Buffer.from(data);
+		const response = parseResponse(payload);
+		if (!response) return;
+
+		switch (response.messageType) {
+			case AuxOperationCodes.OP_PIN_STATE_CHANGE:
+				this.pinStateChangeCallbacks
+					.get(response.pin)
+					?.forEach((cb) => cb(response.state));
+				break;
+		}
+	}
+
+	/**
 	 * Sends the current payload to the connected WebSocket server.
 	 * @throws Error if the WebSocket is not connected or not open.
 	 */
 	Send() {
 		if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN)
 			throw new Error("WebSocket is not connected or not open");
+		if (this.operation_buffer.length === 0) return this;
 		const payload = this.buildPayload();
 		this.websocket.send(payload);
 		this.operation_buffer = [];

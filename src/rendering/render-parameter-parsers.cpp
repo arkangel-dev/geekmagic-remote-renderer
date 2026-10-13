@@ -5,6 +5,7 @@
 #include <debugging.h>
 #include <LittleFS.h>
 #include <TJpg_Decoder.h>
+#include "../callback_manager.h"
 
 namespace
 {
@@ -626,6 +627,40 @@ namespace RenderParameterParsers
                     tft.fillRect(x + column, y + row, blockWidth, blockHeight, ditherColor);
             }
         }
+        return true;
+    }
+
+    bool HandleRegisterGpioCallback(const uint8_t *data, size_t length, uint8_t parameterCount)
+    {
+        if (parameterCount != 1)
+            return false;
+
+        RenderUtilities::ParameterArray params;
+        if (!ReadParams(data, length, parameterCount, params))
+            return false;
+
+        auto &pinParam = params[RendererConsts::PARAM_PIN_ID];
+        if (!pinParam.present || pinParam.length != 2 || pinParam.value >= 16)
+            return false;
+
+        RegisterCallbackPin(static_cast<uint8_t>(pinParam.value));
+        return true;
+    }
+
+    bool HandleClearGpioCallback(const uint8_t *data, size_t length, uint8_t parameterCount)
+    {
+        if (parameterCount != 1)
+            return false;
+
+        RenderUtilities::ParameterArray params;
+        if (!ReadParams(data, length, parameterCount, params))
+            return false;
+
+        auto &pinParam = params[RendererConsts::PARAM_PIN_ID];
+        if (!pinParam.present || pinParam.length != 2 || pinParam.value >= 16)
+            return false;
+
+        UnregisterCallbackPin(static_cast<uint8_t>(pinParam.value));
         return true;
     }
 }

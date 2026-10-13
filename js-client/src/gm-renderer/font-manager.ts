@@ -143,9 +143,10 @@ export async function LoadFontsAsync(
 		(acc, asset) => acc + asset.size,
 		0,
 	);
-	if (currentUsedSize > MaxTotalAssetSize) {
-		await renderer.WipeAssetsAsync();
-	}
+	// TODO: Fix this later
+	// if (currentUsedSize > MaxTotalAssetSize) {
+	// 	await renderer.WipeAssetsAsync();
+	// }
 
 	const missingFontFiles = loadOptions.fontFiles.filter(
 		(assetPath) => !existingAssetNames.includes(assetPath.split("/").pop()!),

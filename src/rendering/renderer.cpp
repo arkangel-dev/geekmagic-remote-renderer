@@ -142,6 +142,22 @@ bool RenderContent(
                     parameterCount);
             break;
 
+        case RendererConsts::OP_REGISTER_GPIO_CALLBACK:
+            success =
+                RenderParameterParsers::HandleRegisterGpioCallback(
+                    data + operationStart,
+                    length - operationStart,
+                    parameterCount);
+            break;
+
+        case RendererConsts::OP_CLEAR_GPIO_CALLBACK:
+            success =
+                RenderParameterParsers::HandleClearGpioCallback(
+                    data + operationStart,
+                    length - operationStart,
+                    parameterCount);
+            break;
+
         default:
             DebugLog.print(
                 F("RenderContent: unsupported operation: "));
