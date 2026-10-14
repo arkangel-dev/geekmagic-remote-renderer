@@ -55,6 +55,7 @@ export class GeekMagicRenderer {
 		Set<(state: boolean) => void>
 	>();
 	private management_url: string | undefined;
+	private assetListCache: Promise<GeekMagicFile[]> | null = null;
 	FontBlitSettings: FontBlitSetting[] = [];
 
 	constructor(options?: GeekMagicRendererOptions) {
@@ -459,19 +460,38 @@ export class GeekMagicRenderer {
 	 */
 	async WipeAssetsAsync() {
 		if (!this.management_url) throw new Error("Management URL is not set");
-		await fetch(this.management_url + "/api/files", {
-			method: "DELETE",
-			redirect: "follow",
-		});
+		this.assetListCache = null;
+		try {
+			await fetch(this.management_url + "/api/files", {
+				method: "DELETE",
+				redirect: "follow",
+			});
+		} finally {
+			this.assetListCache = null;
+		}
 	}
 
-	async ListAssetsAsync(): Promise<GeekMagicFile[]> {
-		if (!this.management_url) throw new Error("Management URL is not set");
-		const response = await fetch(this.management_url + "/api/files", {
-			method: "GET",
-			redirect: "follow",
-		});
-		return response.json();
+	/**
+	 * Lists the assets on the GeekMagic server. The result is cached
+	 * until an upload or wipe invalidates it.
+	 */
+	ListAssetsAsync(): Promise<GeekMagicFile[]> {
+		if (!this.management_url)
+			return Promise.reject(new Error("Management URL is not set"));
+		if (this.assetListCache) return this.assetListCache;
+
+		const request: Promise<GeekMagicFile[]> = fetch(
+			this.management_url + "/api/files",
+			{ method: "GET", redirect: "follow" },
+		)
+			.then((response) => response.json() as Promise<GeekMagicFile[]>)
+			.catch((error) => {
+				// Don't cache failures, but don't clobber a newer request either
+				if (this.assetListCache === request) this.assetListCache = null;
+				throw error;
+			});
+		this.assetListCache = request;
+		return request;
 	}
 
 	/**
@@ -484,11 +504,7 @@ export class GeekMagicRenderer {
 		if (!existsSync(filePath)) throw new Error("File does not exist");
 		const formdata = new FormData();
 		formdata.append("file", new Blob([readFileSync(filePath)]), filePath);
-		await fetch(this.management_url + "/api/files", {
-			method: "POST",
-			body: formdata,
-			redirect: "follow",
-		});
+		this.assetListCache = null;
 	}
 
 	private buildPayload(): Buffer {
