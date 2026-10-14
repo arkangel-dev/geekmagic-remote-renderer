@@ -76,6 +76,8 @@ export interface TffFontTextProps extends BaseGeekNode {
 export interface ImageBoxProps extends BaseGeekNode {
 	src: string;
 	colorDepth?: number;
+	height: number;
+	width: number;
 }
 
 export interface HostNodeBase {

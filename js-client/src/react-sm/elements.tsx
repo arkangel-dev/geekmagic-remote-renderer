@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
 	BoxProps,
 	ColumnElementProps,
@@ -9,7 +9,19 @@ import type {
 	TextProps,
 	TffFontTextProps,
 } from "./node-interfaces.js";
-import { useRequestFont } from "./hooks.js";
+import { useRenderer, useRequestFont } from "./hooks.js";
+import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { existsSync } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import {
+	ConvertToRGB565,
+	DownscaleBitdepth,
+	ResizeImage,
+} from "./image-editing/index.js";
+
+const IMAGE_CACHE_DIR = ".image-cache";
+const DEFAULT_COLOR_DEPTH = 8;
 
 export function Box(props: BoxProps) {
 	return <baseBox {...props} />;
@@ -77,8 +89,68 @@ export function Column(props: ColumnElementProps) {
 }
 
 export function ImageBox(props: ImageBoxProps) {
-	// Similar to the font component. Except instead of 
-	// rasterising a font and uploading it, we need to 
+	// Similar to the font component. Except instead of
+	// rasterising a font and uploading it, we need to
 	// resize an image and upload that instead
+
+	const renderer = useRenderer();
+
+	const converted_slug_name = useMemo(() => {
+		const fileName = props.src.split("/").pop()?.split(".")[0];
+		return `${fileName}-${props.colorDepth ?? DEFAULT_COLOR_DEPTH}-${props.height}x${props.width}`;
+	}, [props.src, props.colorDepth, props.height, props.width]);
+
+	useEffect(() => {
+		let cancelled = false;
+		async function convertImage() {
+			const outputPath = path.join(
+				IMAGE_CACHE_DIR,
+				`${converted_slug_name}.rgb565`,
+			);
+
+			// Check if its already converted
+			// and exists on disk
+			if (existsSync(outputPath)) {
+
+				// Convert the image to the needed
+				// parameters and then save it to the disk
+				const image = await loadImage(props.src);
+				const canvas = createCanvas(image.width, image.height);
+				const ctx = canvas.getContext("2d");
+				ctx.drawImage(image, 0, 0);
+
+				let imageData = ResizeImage({
+					imageData: ctx.getImageData(0, 0, image.width, image.height),
+					width: props.width,
+					height: props.height,
+				});
+
+				imageData = DownscaleBitdepth({
+					imageData,
+					colorDepth: props.colorDepth ?? DEFAULT_COLOR_DEPTH,
+				});
+
+				const converted = ConvertToRGB565({ imageData });
+				if (cancelled) return;
+				await mkdir(IMAGE_CACHE_DIR, { recursive: true });
+				await writeFile(outputPath, converted);
+			}
+
+			await renderer.UploadAssetAsync(outputPath);
+		}
+		convertImage().catch((error) =>
+			console.error(`Failed to convert image ${props.src}:`, error),
+		);
+		return () => {
+			cancelled = true;
+		};
+	}, [
+		converted_slug_name,
+		props.src,
+		props.width,
+		props.height,
+		props.colorDepth,
+	]);
+
 	return <imageBox {...props} />;
 }
