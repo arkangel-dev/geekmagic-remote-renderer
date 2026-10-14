@@ -1,20 +1,25 @@
 import CreateRenderer from "@geekmagic-react/create-renderer.js";
 import { Box, TtfText } from "@geekmagic-react/elements.js";
-import { usePinBinaryState, usePinLongPress } from "@geekmagic-react/hooks.js";
+import { useButton } from "@geekmagic-react/hooks.js";
 import { config } from "dotenv";
 import { useState } from "react";
 
 function App() {
 	const [count, setCount] = useState(0);
 
-	usePinLongPress(() => setCount(0), 10);
-	usePinBinaryState((state) => state && setCount((prev) => prev + 1), 10);
+	// 10 refers to GPIO pin 10, not 
+	// the 10th pin on the ESP12F board
+	useButton({
+		pin: 10, 
+		onPress: () => setCount((prev) => prev + 1),
+		onLongPress: () => setCount(0),
+	});
 
 	return (
 		<Box tb={"p-[20] flex items-center justify-center h-full"}>
 			<TtfText
 				fontPath={"./example_assets/raw_fonts/SankofaDisplay.ttf"}
-				fontSize={120}
+				fontSize={150}
 			>
 				{count}
 			</TtfText>

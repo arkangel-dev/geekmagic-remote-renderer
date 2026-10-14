@@ -93,9 +93,7 @@ export function usePinBinaryState(
 		const listener = (state: boolean) => callbackRef.current(state);
 		ctx.renderer.RegisterPinStateChange({ pin, callback: listener }).Send();
 		return () => {
-			ctx.renderer
-				.UnregisterPinStateChange({ pin, callback: listener })
-				.Send();
+			ctx.renderer.UnregisterPinStateChange({ pin, callback: listener }).Send();
 		};
 	}, [ctx.renderer, pin]);
 }
@@ -118,4 +116,37 @@ export function usePinLongPress(
 			longPressTimeout.current = null;
 		}
 	}, pin);
+}
+
+export interface UseButtonCallbackProps {
+	pin: number;
+	onPress?: () => void;
+	onRelease?: () => void;
+	onLongPress?: () => void;
+	longPressDuration?: number;
+}
+export function useButton(options: UseButtonCallbackProps) {
+	const freshLongPressRelease = useRef(false);
+	if (options.onPress) {
+		usePinBinaryState((state) => {
+			if (!freshLongPressRelease.current) {
+				if (state) {
+					options.onPress?.();
+				} else {
+					options.onRelease?.();
+				}
+			}
+			freshLongPressRelease.current = false;
+		}, options.pin);
+	}
+	if (options.onLongPress) {
+		usePinLongPress(
+			() => {
+				options.onLongPress?.();
+				freshLongPressRelease.current = true;
+			},
+			options.pin,
+			options.longPressDuration,
+		);
+	}
 }
