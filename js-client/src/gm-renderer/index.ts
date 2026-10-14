@@ -521,6 +521,12 @@ export class GeekMagicRenderer {
 		const formdata = new FormData();
 		formdata.append("file", new Blob([readFileSync(filePath)]), filePath);
 		this.assetListCache = null;
+		console.log(`Uploading asset: ${filePath}`);
+		await fetch(this.management_url + "/api/files", {
+			method: "POST",
+			body: formdata,
+			redirect: "follow",
+		});
 	}
 
 	private buildPayload(): Buffer {

@@ -102,6 +102,10 @@ export function ImageBox(props: ImageBoxProps) {
 		return `${fileName}-${depth}-${props.height}x${props.width}`;
 	}, [props.src, props.colorDepth, props.height, props.width]);
 
+	const final_asset_name = useMemo(() => {
+		return `${converted_slug_name}.rgb565`;
+	}, [converted_slug_name]);
+
 	useEffect(() => {
 		let cancelled = false;
 		async function convertImage() {
@@ -117,13 +121,16 @@ export function ImageBox(props: ImageBoxProps) {
 					(asset) => asset.name === `${converted_slug_name}.rgb565`,
 				)
 			) {
+				console.log(
+					`Asset ${converted_slug_name}.rgb565 already exists on renderer`,
+				);
 				setIsReady(true);
 				return;
 			}
 
 			// Check if its already converted
 			// and exists on disk
-			if (existsSync(outputPath)) {
+			if (!existsSync(outputPath)) {
 				// Convert the image to the needed
 				// parameters and then save it to the disk
 				const image = await loadImage(props.src);
@@ -165,5 +172,6 @@ export function ImageBox(props: ImageBoxProps) {
 		props.colorDepth,
 	]);
 
-	return <imageBox {...props} />;
+	if (!isReady) return null;
+	return <imageBox {...props} src={final_asset_name} />;
 }

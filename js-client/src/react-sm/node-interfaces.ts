@@ -25,7 +25,8 @@ export type InternalNodeName =
 	| "baseBox"
 	| "baseText"
 	| "fontText"
-	| "ditherBox";
+	| "ditherBox"
+	| "imageBox";
 
 export interface BoxProps extends BaseGeekNode {
 	children?: ReactNode;
