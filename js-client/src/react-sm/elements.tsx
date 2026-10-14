@@ -77,5 +77,8 @@ export function Column(props: ColumnElementProps) {
 }
 
 export function ImageBox(props: ImageBoxProps) {
+	// Similar to the font component. Except instead of 
+	// rasterising a font and uploading it, we need to 
+	// resize an image and upload that instead
 	return <imageBox {...props} />;
 }

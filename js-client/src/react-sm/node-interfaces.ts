@@ -73,7 +73,10 @@ export interface TffFontTextProps extends BaseGeekNode {
 	characterSetRange?: [number, number];
 }
 
-export interface ImageBoxProps extends BaseGeekNode {}
+export interface ImageBoxProps extends BaseGeekNode {
+	src: string;
+	colorDepth?: number;
+}
 
 export interface HostNodeBase {
 	yogaNode?: YogaNode;
