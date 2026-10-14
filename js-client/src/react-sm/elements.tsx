@@ -4,6 +4,7 @@ import type {
 	ColumnElementProps,
 	DitherBoxProps,
 	FontTextProps,
+	ImageBoxProps,
 	RowElementProps,
 	TextProps,
 	TffFontTextProps,
@@ -21,7 +22,6 @@ export function DitherBox(props: DitherBoxProps) {
 export function Text(props: TextProps) {
 	return <baseText {...props} />;
 }
-
 
 export function VlwText(props: FontTextProps) {
 	return <fontText {...props} />;
@@ -74,4 +74,8 @@ export function Column(props: ColumnElementProps) {
 			{...props}
 		/>
 	);
+}
+
+export function ImageBox(props: ImageBoxProps) {
+	return <imageBox {...props} />;
 }

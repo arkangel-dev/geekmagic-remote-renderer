@@ -7,6 +7,7 @@ declare module 'react/jsx-runtime' {
 			ditherBox: Record<string, unknown>;
 			baseText: Record<string, unknown>;
 			fontText: Record<string, unknown>;
+			imageBox: Record<string, unknown>;
 		}
 	}
 }
