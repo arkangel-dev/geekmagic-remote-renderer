@@ -10,9 +10,9 @@ function App() {
 		<Box tb={"p-[20] flex items-center justify-center h-full"}>
 			<ImageBox
 				src={"example_assets/cat.jpg"}
-				height={150}
-				width={150}
-				colorDepth={8}
+				height={240}
+				width={240}
+				colorDepth={1}
 			/> 
 		</Box>
 	);

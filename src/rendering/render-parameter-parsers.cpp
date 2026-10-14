@@ -733,6 +733,15 @@ namespace RenderParameterParsers
         }
 
         TFT_eSprite *currentSprite = RendererRuntime::GetCurrentTempSprite();
+        // TFT_eSPI sends memory order unless swap is enabled; the rows hold
+        // native little-endian uint16 values, so they need swapping to
+        // go out as big-endian on the wire
+        bool previousSwap = currentSprite != nullptr ? currentSprite->getSwapBytes() : tft.getSwapBytes();
+        if (currentSprite != nullptr)
+            currentSprite->setSwapBytes(true);
+        else
+            tft.setSwapBytes(true);
+
         bool success = true;
         for (int row = 0; row < height; ++row)
         {
@@ -749,6 +758,11 @@ namespace RenderParameterParsers
             else
                 tft.pushImage(x, y + row, width, 1, rowBuffer);
         }
+
+        if (currentSprite != nullptr)
+            currentSprite->setSwapBytes(previousSwap);
+        else
+            tft.setSwapBytes(previousSwap);
 
         free(rowBuffer);
         file.close();
