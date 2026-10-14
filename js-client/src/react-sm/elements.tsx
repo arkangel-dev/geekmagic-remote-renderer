@@ -94,10 +94,12 @@ export function ImageBox(props: ImageBoxProps) {
 	// resize an image and upload that instead
 
 	const renderer = useRenderer();
+	const [isReady, setIsReady] = useState(false);
 
 	const converted_slug_name = useMemo(() => {
 		const fileName = props.src.split("/").pop()?.split(".")[0];
-		return `${fileName}-${props.colorDepth ?? DEFAULT_COLOR_DEPTH}-${props.height}x${props.width}`;
+		const depth = props.colorDepth ?? DEFAULT_COLOR_DEPTH;
+		return `${fileName}-${depth}-${props.height}x${props.width}`;
 	}, [props.src, props.colorDepth, props.height, props.width]);
 
 	useEffect(() => {
@@ -108,10 +110,20 @@ export function ImageBox(props: ImageBoxProps) {
 				`${converted_slug_name}.rgb565`,
 			);
 
+			const asset_list = await renderer.ListAssetsAsync();
+			console.log(`Asset list:`, asset_list);
+			if (
+				asset_list.some(
+					(asset) => asset.name === `${converted_slug_name}.rgb565`,
+				)
+			) {
+				setIsReady(true);
+				return;
+			}
+
 			// Check if its already converted
 			// and exists on disk
 			if (existsSync(outputPath)) {
-
 				// Convert the image to the needed
 				// parameters and then save it to the disk
 				const image = await loadImage(props.src);
@@ -137,6 +149,7 @@ export function ImageBox(props: ImageBoxProps) {
 			}
 
 			await renderer.UploadAssetAsync(outputPath);
+			setIsReady(true);
 		}
 		convertImage().catch((error) =>
 			console.error(`Failed to convert image ${props.src}:`, error),
