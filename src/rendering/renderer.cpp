@@ -158,6 +158,14 @@ bool RenderContent(
                     parameterCount);
             break;
 
+        case RendererConsts::OP_DRAW_LFS_RGB565:
+            success =
+                RenderParameterParsers::HandleDrawLFSRGB565(
+                    data + operationStart,
+                    length - operationStart,
+                    parameterCount);
+            break;
+
         default:
             DebugLog.print(
                 F("RenderContent: unsupported operation: "));
