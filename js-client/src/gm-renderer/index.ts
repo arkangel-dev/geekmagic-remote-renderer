@@ -18,6 +18,7 @@ import type {
 	DrawDitherRectData,
 	RegisterPinStateChangeData,
 	UnregisterPinStateChangeData,
+	DrawRGB565Data,
 } from "./types.js";
 import { existsSync, readFile, readFileSync } from "node:fs";
 
@@ -311,6 +312,21 @@ export class GeekMagicRenderer {
 		this.operation_buffer.push(
 			Buffer.concat([
 				Buffer.from([OperationCodes.OP_DRAW_LFS_BITMAP, 5]),
+				this.paramU16(ParameterCodes.PARAM_X, props.x),
+				this.paramU16(ParameterCodes.PARAM_Y, props.y),
+				this.paramU16(ParameterCodes.PARAM_WIDTH, props.width),
+				this.paramU16(ParameterCodes.PARAM_HEIGHT, props.height),
+				this.paramText(ParameterCodes.PARAM_FILENAME, props.file),
+			]),
+		);
+
+		return this;
+	}
+
+	DrawRGB565(props: DrawRGB565Data): GeekMagicRenderer {
+		this.operation_buffer.push(
+			Buffer.concat([
+				Buffer.from([OperationCodes.OP_DRAW_LFS_RGB565, 5]),
 				this.paramU16(ParameterCodes.PARAM_X, props.x),
 				this.paramU16(ParameterCodes.PARAM_Y, props.y),
 				this.paramU16(ParameterCodes.PARAM_WIDTH, props.width),
