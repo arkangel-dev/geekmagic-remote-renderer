@@ -212,6 +212,9 @@ export function ConvertToTailbreeze(style: Styles, ...tags: string[]): Styles {
 			case "h-full":
 				style.height = "100%";
 				break;
+			case "flex-auto":
+				style.flex = "1 1 auto";
+				break;
 			default:
 				throw new Error(`Unsupported Tailbreeze tag ${tag}`);
 		}
