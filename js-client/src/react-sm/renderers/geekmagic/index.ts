@@ -208,8 +208,8 @@ function RenderDitherBox(ctx: RenderPrimitiveElementProps) {
 function RenderImageBox(ctx: RenderPrimitiveElementProps) {
 	const { node, absoluteLayout, renderer } = ctx;
 	renderer.DrawRGB565({
-		x: absoluteLayout.left - (node.props.width as number) / 2,
-		y: absoluteLayout.top - (node.props.height as number) / 2,
+		x: Math.round(absoluteLayout.left),
+		y: Math.round(absoluteLayout.top),
 		width: node.props.width as number,
 		height: node.props.height as number,
 		file: node.props.src as string,

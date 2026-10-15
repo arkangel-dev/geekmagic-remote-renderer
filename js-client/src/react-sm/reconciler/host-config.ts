@@ -55,7 +55,7 @@ export const hostConfig: HostConfig = {
 	supportsMicrotasks: true,
 
 	createInstance(type, props, rootContainer): HostNode {
-		const [styles, updatedYogaNode] = CreateYogaNode(props);
+		const [styles, updatedYogaNode] = CreateYogaNode(props, type);
 
 		return {
 			id: v4(),
@@ -112,8 +112,13 @@ export const hostConfig: HostConfig = {
 	commitUpdate(instance, type, previousProps, nextProps) {
 		instance.props = nextProps;
 
-		const [newStyles, updatedYogaNode] = CreateYogaNode(nextProps);
+		const [newStyles, updatedYogaNode] = CreateYogaNode(nextProps, type);
+		const imageSizeChanged =
+			type === "imageBox" &&
+			(previousProps.width !== nextProps.width ||
+				previousProps.height !== nextProps.height);
 		const stylesChanged =
+			imageSizeChanged ||
 			JSON.stringify(instance.style ?? {}) !== JSON.stringify(newStyles ?? {});
 		if (!stylesChanged) {
 			updatedYogaNode.free();
