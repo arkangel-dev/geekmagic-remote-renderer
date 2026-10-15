@@ -4,8 +4,8 @@
 
 This is a custom firmware for the GeekMagic Display (ESP12F model) that lets you render content remotely. Rendering instructions can be manually written out or it can be sent via a custom React renderer. This let you write a quick, component based UI for the display, (almost) as if you were writing, complete with Reacts state management and hooks.
 
-Rendering instructions are sent over a websocket connection to the display. Rendering instructions are described by the renderer, and the content is layouted to web standard (mostly) with the help of [Yoga Layout](https://www.yogalayout.dev) and state is fully managed by React. You can also hook up external inputs such as push buttons or capacitive touch sensors and use those within your components!
-
+Rendering instructions are sent over a websocket connection to the display. Rendering instructions are described by the renderer, and the content is layouted to web standard (mostly) with the help of [Yoga Layout](https://www.yogalayout.dev) and state is fully managed by React. State changes are diffed so that parts of the screen are updated only if its layout or state change. So less flickering. You can also hook up external inputs such as push buttons or capacitive touch sensors and use those within your components!
+ 
 ---
 
 ## Installation
