@@ -2,7 +2,6 @@
 
 ![](./.readme-assets/banner-2.png)
 
-# Geekmagic Remote Renderer
 This is a custom firmware for the GeekMagic Display that accepts rendering instructions via a custom protocol. The idea being that you can easily and rapidly develop a UI without continuously sending over new firmware to the display.
 
 This combined with a custom react renderer, it lets you create a usable UI within minutes. Content is layouted to web standard (mostly) with the help of [Yoga Layout](https://www.yogalayout.dev) and state is fully managed by React.
