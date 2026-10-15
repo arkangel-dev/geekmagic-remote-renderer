@@ -9,10 +9,16 @@ function App() {
 	return (
 		<Box tb={"p-[20] flex items-center justify-center h-full"}>
 			<ImageBox
-				src={"example_assets/cat.jpg"}
-				height={240}
-				width={240}
-				colorDepth={1}
+				src={"example_assets/weather/cloud-sun.png"}
+				height={60}
+				width={60}
+				colorDepth={8}
+			/> 
+			<ImageBox
+				src={"example_assets/weather/sun.png"}
+				height={60}
+				width={60}
+				colorDepth={8}
 			/> 
 		</Box>
 	);
