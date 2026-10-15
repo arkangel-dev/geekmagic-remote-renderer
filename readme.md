@@ -1,6 +1,6 @@
 ![](https://img.shields.io/badge/Current%20Build-1.0.0-green) ![](https://img.shields.io/badge/React-19.2.18-green?logo=react) 
 
-![](./.readme-assets/banner-1.png)
+![](./.readme-assets/banner-2.png)
 
 # Geekmagic Remote Renderer
 This is a custom firmware for the GeekMagic Display that accepts rendering instructions via a custom protocol. The idea being that you can easily and rapidly develop a UI without continuously sending over new firmware to the display.
