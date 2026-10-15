@@ -36,6 +36,7 @@ const enum RenderingOperationCodes {
 	OP_DRAW_LFS_BITMAP = 0x0d,
 	OP_REGISTER_GPIO_CALLBACK = 0x0e,
 	OP_CLEAR_GPIO_CALLBACK = 0x0f,
+	OP_DRAW_LFS_RGB565 = 0x10,
 }
 
 const enum AuxParameterCodes {

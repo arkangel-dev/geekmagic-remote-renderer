@@ -70,6 +70,10 @@ export interface DrawBitmapData extends PositionData, SizeData {
 	file: string;
 }
 
+export interface DrawRGB565Data extends PositionData, SizeData {
+	file: string;
+}
+
 export interface RegisterPinStateChangeData {
 	pin: number;
 	callback: (state: boolean) => void;

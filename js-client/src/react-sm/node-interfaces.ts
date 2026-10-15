@@ -21,7 +21,12 @@ export interface BaseGeekNode {
 	tb?: string;
 }
 
-export type InternalNodeName = "baseBox" | "baseText" | "fontText" | "ditherBox";
+export type InternalNodeName =
+	| "baseBox"
+	| "baseText"
+	| "fontText"
+	| "ditherBox"
+	| "imageBox";
 
 export interface BoxProps extends BaseGeekNode {
 	children?: ReactNode;
@@ -47,8 +52,14 @@ export interface RowElementProps {
 export interface ColumnElementProps {
 	children?: ReactNode;
 	spacing?: number;
-	align?: "center" | "flex-start" | "flex-end" | "stretch" | "baseline"
-	justify?: "center" | "flex-start" | "flex-end" | "space-between" | "space-around" | "space-evenly"
+	align?: "center" | "flex-start" | "flex-end" | "stretch" | "baseline";
+	justify?:
+		| "center"
+		| "flex-start"
+		| "flex-end"
+		| "space-between"
+		| "space-around"
+		| "space-evenly";
 }
 
 export interface FontTextProps extends BaseGeekNode {
@@ -61,6 +72,13 @@ export interface TffFontTextProps extends BaseGeekNode {
 	fontPath: string;
 	fontSize: number;
 	characterSetRange?: [number, number];
+}
+
+export interface ImageBoxProps extends BaseGeekNode {
+	src: string;
+	colorDepth?: number;
+	height: number;
+	width: number;
 }
 
 export interface HostNodeBase {

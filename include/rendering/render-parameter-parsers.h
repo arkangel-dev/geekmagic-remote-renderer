@@ -25,4 +25,5 @@ namespace RenderParameterParsers
     bool HandleDrawLFSBitmap(const uint8_t *data, size_t length, uint8_t parameterCount);
     bool HandleRegisterGpioCallback(const uint8_t *data, size_t length, uint8_t parameterCount);
     bool HandleClearGpioCallback(const uint8_t *data, size_t length, uint8_t parameterCount);
+    bool HandleDrawLFSRGB565(const uint8_t *data, size_t length, uint8_t parameterCount);
 }

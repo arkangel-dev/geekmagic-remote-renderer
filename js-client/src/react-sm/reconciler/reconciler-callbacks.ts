@@ -16,10 +16,28 @@ import { TextPositionDatum } from "@geekmagic-websocket/consts.js";
 import { GetRenderer } from "@geekmagic-react/create-renderer.js";
 
 /**
+ * ImageBox dimensions come strictly from the width/height props and
+ * Yoga is not allowed to grow, shrink or stretch it.
+ */
+function applyImageBoxSize(
+	yogaNode: ReturnType<typeof Yoga.Node.create>,
+	props: Record<string, unknown>,
+): void {
+	yogaNode.setWidth(props.width as number);
+	yogaNode.setHeight(props.height as number);
+	yogaNode.setMinWidth(undefined);
+	yogaNode.setMinHeight(undefined);
+	yogaNode.setMaxWidth(undefined);
+	yogaNode.setMaxHeight(undefined);
+	yogaNode.setFlexGrow(0);
+	yogaNode.setFlexShrink(0);
+}
+
+/**
  * Create a new Yoga node and then apply the styles
  * to it
  */
-export function CreateYogaNode(props: Record<string, unknown>) {
+export function CreateYogaNode(props: Record<string, unknown>, type?: string) {
 	const yogaNode = Yoga.Node.create();
 	var style = props.style;
 	const tailbreezeStyle = props.tb as string | undefined;
@@ -31,6 +49,8 @@ export function CreateYogaNode(props: Record<string, unknown>) {
 			style as Record<string, unknown>,
 		);
 	}
+
+	if (type === "imageBox") applyImageBoxSize(yogaNode, props);
 
 	return [style as Styles, yogaNode] as const;
 }

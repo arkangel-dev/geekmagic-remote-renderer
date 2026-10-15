@@ -18,6 +18,7 @@ import type {
 	DrawDitherRectData,
 	RegisterPinStateChangeData,
 	UnregisterPinStateChangeData,
+	DrawRGB565Data,
 } from "./types.js";
 import { existsSync, readFile, readFileSync } from "node:fs";
 
@@ -55,6 +56,7 @@ export class GeekMagicRenderer {
 		Set<(state: boolean) => void>
 	>();
 	private management_url: string | undefined;
+	private assetListCache: Promise<GeekMagicFile[]> | null = null;
 	FontBlitSettings: FontBlitSetting[] = [];
 
 	constructor(options?: GeekMagicRendererOptions) {
@@ -321,6 +323,21 @@ export class GeekMagicRenderer {
 		return this;
 	}
 
+	DrawRGB565(props: DrawRGB565Data): GeekMagicRenderer {
+		this.operation_buffer.push(
+			Buffer.concat([
+				Buffer.from([OperationCodes.OP_DRAW_LFS_RGB565, 5]),
+				this.paramU16(ParameterCodes.PARAM_X, props.x),
+				this.paramU16(ParameterCodes.PARAM_Y, props.y),
+				this.paramU16(ParameterCodes.PARAM_WIDTH, props.width),
+				this.paramU16(ParameterCodes.PARAM_HEIGHT, props.height),
+				this.paramText(ParameterCodes.PARAM_FILENAME, props.file),
+			]),
+		);
+
+		return this;
+	}
+
 	/**
 	 * Registers a callback for changes in the
 	 * state of a specified GPIO pin.
@@ -459,19 +476,38 @@ export class GeekMagicRenderer {
 	 */
 	async WipeAssetsAsync() {
 		if (!this.management_url) throw new Error("Management URL is not set");
-		await fetch(this.management_url + "/api/files", {
-			method: "DELETE",
-			redirect: "follow",
-		});
+		this.assetListCache = null;
+		try {
+			await fetch(this.management_url + "/api/files", {
+				method: "DELETE",
+				redirect: "follow",
+			});
+		} finally {
+			this.assetListCache = null;
+		}
 	}
 
-	async ListAssetsAsync(): Promise<GeekMagicFile[]> {
-		if (!this.management_url) throw new Error("Management URL is not set");
-		const response = await fetch(this.management_url + "/api/files", {
-			method: "GET",
-			redirect: "follow",
-		});
-		return response.json();
+	/**
+	 * Lists the assets on the GeekMagic server. The result is cached
+	 * until an upload or wipe invalidates it.
+	 */
+	ListAssetsAsync(): Promise<GeekMagicFile[]> {
+		if (!this.management_url)
+			return Promise.reject(new Error("Management URL is not set"));
+		if (this.assetListCache) return this.assetListCache;
+
+		const request: Promise<GeekMagicFile[]> = fetch(
+			this.management_url + "/api/files",
+			{ method: "GET", redirect: "follow" },
+		)
+			.then((response) => response.json() as Promise<GeekMagicFile[]>)
+			.catch((error) => {
+				// Don't cache failures, but don't clobber a newer request either
+				if (this.assetListCache === request) this.assetListCache = null;
+				throw error;
+			});
+		this.assetListCache = request;
+		return request;
 	}
 
 	/**
@@ -484,6 +520,8 @@ export class GeekMagicRenderer {
 		if (!existsSync(filePath)) throw new Error("File does not exist");
 		const formdata = new FormData();
 		formdata.append("file", new Blob([readFileSync(filePath)]), filePath);
+		this.assetListCache = null;
+		console.log(`Uploading asset: ${filePath}`);
 		await fetch(this.management_url + "/api/files", {
 			method: "POST",
 			body: formdata,

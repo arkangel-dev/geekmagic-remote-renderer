@@ -143,6 +143,10 @@ function visit(
 			case "fontText":
 				RenderFontText(renderContext);
 				break;
+
+			case "imageBox":
+				RenderImageBox(renderContext);
+				break;
 		}
 	}
 
@@ -196,7 +200,18 @@ function RenderDitherBox(ctx: RenderPrimitiveElementProps) {
 			y: absoluteLayout.top,
 			width: absoluteLayout.width,
 			height: absoluteLayout.height,
-			ditherColor: node.props.ditherColor as string ?? "#000",
+			ditherColor: (node.props.ditherColor as string) ?? "#000",
 			ditherSize: node.props.ditherSize as number,
 		});
+}
+
+function RenderImageBox(ctx: RenderPrimitiveElementProps) {
+	const { node, absoluteLayout, renderer } = ctx;
+	renderer.DrawRGB565({
+		x: Math.round(absoluteLayout.left),
+		y: Math.round(absoluteLayout.top),
+		width: node.props.width as number,
+		height: node.props.height as number,
+		file: node.props.src as string,
+	});
 }

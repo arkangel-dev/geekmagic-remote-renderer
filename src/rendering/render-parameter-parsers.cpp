@@ -663,4 +663,109 @@ namespace RenderParameterParsers
         UnregisterCallbackPin(static_cast<uint8_t>(pinParam.value));
         return true;
     }
+
+    bool HandleDrawLFSRGB565(const uint8_t *data, size_t length, uint8_t parameterCount)
+    {
+        RenderUtilities::ParameterArray params;
+        if (!ReadParams(data, length, parameterCount, params))
+        {
+            DebugLog.println(F("HandleDrawLFSRGB565: Failed to read parameters."));
+            return false;
+        }
+
+        auto &xParam = params[RendererConsts::PARAM_X];
+        auto &yParam = params[RendererConsts::PARAM_Y];
+        auto &widthParam = params[RendererConsts::PARAM_WIDTH];
+        auto &heightParam = params[RendererConsts::PARAM_HEIGHT];
+        auto &filenameParam = params[RendererConsts::PARAM_FILE_NAME];
+
+        // A raw RGB565 file carries no header, so the dimensions must be supplied
+        if (!xParam.present || !yParam.present || !widthParam.present ||
+            !heightParam.present || !filenameParam.present || filenameParam.length == 0)
+        {
+            DebugLog.println(F("HandleDrawLFSRGB565: Missing required parameters."));
+            return false;
+        }
+
+        int x = (int16_t)xParam.value;
+        int y = (int16_t)yParam.value;
+        int width = widthParam.value;
+        int height = heightParam.value;
+        if (width <= 0 || height <= 0 || filenameParam.length > (size_t)127)
+        {
+            DebugLog.println(F("HandleDrawLFSRGB565: Invalid width, height, or filename length."));
+            return false;
+        }
+
+        char filename[128];
+        memcpy(filename, filenameParam.data, filenameParam.length);
+        filename[filenameParam.length] = '\0';
+        if (strstr(filename, "..") != nullptr || strchr(filename, '/') != nullptr || strchr(filename, '\\') != nullptr)
+        {
+            DebugLog.println(F("HandleDrawLFSRGB565: Invalid filename."));
+            return false;
+        }
+
+        String path = "/assets/";
+        path += filename;
+        File file = LittleFS.open(path, "r");
+        if (!file)
+        {
+            DebugLog.println(F("HandleDrawLFSRGB565: Failed to open file."));
+            return false;
+        }
+
+        const size_t rowBytes = (size_t)width * 2;
+        if (file.size() < rowBytes * (size_t)height)
+        {
+            DebugLog.println(F("HandleDrawLFSRGB565: File is smaller than width * height * 2."));
+            file.close();
+            return false;
+        }
+
+        // Stream one row at a time; the ESP8266 can't hold a full frame in RAM
+        uint16_t *rowBuffer = (uint16_t *)malloc(rowBytes);
+        if (rowBuffer == nullptr)
+        {
+            DebugLog.println(F("HandleDrawLFSRGB565: Out of memory."));
+            file.close();
+            return false;
+        }
+
+        TFT_eSprite *currentSprite = RendererRuntime::GetCurrentTempSprite();
+        // TFT_eSPI sends memory order unless swap is enabled; the rows hold
+        // native little-endian uint16 values, so they need swapping to
+        // go out as big-endian on the wire
+        bool previousSwap = currentSprite != nullptr ? currentSprite->getSwapBytes() : tft.getSwapBytes();
+        if (currentSprite != nullptr)
+            currentSprite->setSwapBytes(true);
+        else
+            tft.setSwapBytes(true);
+
+        bool success = true;
+        for (int row = 0; row < height; ++row)
+        {
+            if (file.read((uint8_t *)rowBuffer, rowBytes) != rowBytes)
+            {
+                DebugLog.println(F("HandleDrawLFSRGB565: Short read."));
+                success = false;
+                break;
+            }
+
+            // The file is stored little-endian, matching the MCU's native order
+            if (currentSprite != nullptr)
+                currentSprite->pushImage(x, y + row, width, 1, rowBuffer);
+            else
+                tft.pushImage(x, y + row, width, 1, rowBuffer);
+        }
+
+        if (currentSprite != nullptr)
+            currentSprite->setSwapBytes(previousSwap);
+        else
+            tft.setSwapBytes(previousSwap);
+
+        free(rowBuffer);
+        file.close();
+        return success;
+    }
 }

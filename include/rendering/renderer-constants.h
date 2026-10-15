@@ -24,7 +24,8 @@ namespace RendererConsts
         OP_DRAW_DITHER_RECT = 0x0C,
         OP_DRAW_LFS_BITMAP = 0x0D,
         OP_REGISTER_GPIO_CALLBACK = 0x0E,
-        OP_CLEAR_GPIO_CALLBACK = 0x0F
+        OP_CLEAR_GPIO_CALLBACK = 0x0F,
+        OP_DRAW_LFS_RGB565 = 0x10
     };
 
     enum ParameterType : uint8_t
