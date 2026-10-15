@@ -1,13 +1,17 @@
 ![](https://img.shields.io/badge/Current%20Build-1.0.0-green) ![](https://img.shields.io/badge/React-19.2.18-green?logo=react) 
 
-![](./.readme-assets/banner-2.png)
+![](./.readme-assets/banner-3.png)
 
-This is a custom firmware for the GeekMagic Display that accepts rendering instructions via a custom protocol. The idea being that you can easily and rapidly develop a UI without continuously sending over new firmware to the display.
+This is a custom firmware for the GeekMagic Display (ESP12F model) that lets you render content remotely. Rendering instructions can be manually written out or it can be sent via a custom React renderer. This let you write a quick, component based UI for the display, (almost) as if you were writing, complete with Reacts state management and hooks.
 
-This combined with a custom react renderer, it lets you create a usable UI within minutes. Content is layouted to web standard (mostly) with the help of [Yoga Layout](https://www.yogalayout.dev) and state is fully managed by React.
+Rendering instructions are sent over a websocket connection to the display. Rendering instructions are described by the renderer, and the content is layouted to web standard (mostly) with the help of [Yoga Layout](https://www.yogalayout.dev) and state is fully managed by React. You can also hook up external inputs such as push buttons or capacitive touch sensors and use those within your components!
 
+---
 
-## Example 
+## Installation
+Right now you can just build it via [PlatformIO](https://platformio.org/install/ide?install=vscode) and send it over the ESP12F via a [CH343 board](https://www.waveshare.com/wiki/CH343_USB_UART_Board). You can get these for pretty cheap on Aliexpress. I'll work on an easier way to upload the firmware in the future
+
+## Usage
 ```tsx
 import CreateRenderer from "@geekmagic-react/create-renderer.js";
 import { Box, Text, TtfText } from "@geekmagic-react/elements.js";
@@ -47,14 +51,7 @@ render(<App />);
 ```
 ![](./.readme-assets/example-result.png)
 
-## Setup & Installation
-Right now you can just build it via [PlatformIO](https://platformio.org/install/ide?install=vscode) and send it over the ESP12F via a [CH343 board](https://www.waveshare.com/wiki/CH343_USB_UART_Board). You can get these for pretty cheap on Aliexpress. I'll work on an easier way to upload the firmware in the future
-
-## Known Limitations & Bugs
-- [ ] Images cannot be sent over the websocket. Right now images have to be pre-loaded along with files. I think I can live with that tho
-- [ ] Tailbreeze, the super simplified version of Tailwind I implemented has a lot of missing fields
-
-## Websocket Protocol (GRRP)
+## Websocket Protocol (GMRRP)
 GMRRP stands for `Geekmagic Remote Render Protocol`. It's not the best design but it gets the job done. Each rendering instruction packet can store 65535 operations. Each operation can have 255 parameters and each parameter can have a max value size of 65535 bytes.
 
 ### Packet format
