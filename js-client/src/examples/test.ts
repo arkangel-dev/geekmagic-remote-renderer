@@ -18,9 +18,9 @@ for (const file of frameFiles) {
 const finalAnimation = BuildAnimation({
 	raw_images: images,
 	predelay: 100,
-	width: 100,
-	height: 100,
-	delta: 10
+	width: 240,
+	height: 240,
+	delta: 30
 });
 
 const serializedAnimation = SerializeAnimation(finalAnimation);
