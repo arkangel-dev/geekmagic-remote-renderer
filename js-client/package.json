@@ -14,7 +14,7 @@
 		"example:react:hw": "pnpx tsx watch src/examples/react-hw-interact.tsx",
 		"example:react:weather": "pnpx tsx watch src/examples/react-weather.tsx",
 		"font:convert": "pnpx tsx src/gm-renderer/font-converter/index.ts",
-		"test": "pnpx tsx watch src/examples/test.tsx"
+		"test": "pnpx tsx watch src/examples/test.ts"
 	},
 	"keywords": [],
 	"author": "",
