@@ -1,6 +1,9 @@
-import { readdirSync } from "node:fs";
+import { readdirSync, writeFileSync } from "node:fs";
 import { Image, loadImage } from "@napi-rs/canvas";
-import { BuildAnimation } from "@geekmagic-websocket/animation-builder/index.js";
+import {
+	BuildAnimation,
+	SerializeAnimation,
+} from "@geekmagic-websocket/animation-builder/index.js";
 
 const frameFolder = "./example_assets/coin_frames";
 const frameFiles = readdirSync(frameFolder);
@@ -11,5 +14,12 @@ for (const file of frameFiles) {
 	images.push(image);
 }
 
-const finalAnimation = BuildAnimation(images);
-console.log(JSON.stringify(finalAnimation, null, 2));
+const finalAnimation = BuildAnimation({
+	raw_images: images,
+	predelay: 100,
+	width: 100,
+	height: 100,
+});
+
+const serializedAnimation = SerializeAnimation(finalAnimation);
+writeFileSync("./finalAnimation.bin", serializedAnimation);
