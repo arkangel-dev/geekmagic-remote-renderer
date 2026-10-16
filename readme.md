@@ -2,10 +2,10 @@
 
 ![](./.readme-assets/banner-3.png)
 
-This is a custom firmware for the GeekMagic Display (ESP12F model) that lets you render content remotely. Rendering instructions can be manually written out or it can be sent via a custom React renderer. This let you write a quick, component based UI for the display, (almost) as if you were writing, complete with Reacts state management and hooks.
+This is a custom firmware for the GeekMagic Display (ESP12F model) that lets you render content remotely. Rendering instructions can be manually written out or it can be generated via a custom React renderer. This let you write a quick, component based UI for the display, (almost) as if you were writing for the browser, complete with Reacts state management and hooks. The content is layouted automatically with Metas [Yoga Layout](https://www.yogalayout.dev) engine. 
 
-Rendering instructions are sent over a websocket connection to the display. Rendering instructions are described by the renderer, and the content is layouted to web standard (mostly) with the help of [Yoga Layout](https://www.yogalayout.dev) and state is fully managed by React. State changes are diffed so that parts of the screen are updated only if its layout or state change. So less flickering. You can also hook up external inputs such as push buttons or capacitive touch sensors and use those within your components!
- 
+Instructions are sent over a websocket connection to the display and state changes are diffed so that parts of the screen are updated only if its layout or state change. So less flickering and faster updates. You can also hook up external inputs such as push buttons or capacitive touch sensors and use those within your components!
+
 ---
 
 ## Installation
@@ -19,32 +19,32 @@ import { config } from "dotenv";
 import { useEffect, useState } from "react";
 
 function App() {
-	const [seconds, setSeconds] = useState(0);
-	useEffect(() => {
-		const interval = setInterval(() => {
-			setSeconds((prev) => prev + 1);
-		}, 1000);
-		return () => clearInterval(interval);
-	}, []);
+   const [seconds, setSeconds] = useState(0);
+   useEffect(() => {
+      const interval = setInterval(() => {
+         setSeconds((prev) => prev + 1);
+      }, 1000);
+      return () => clearInterval(interval);
+   }, []);
 
-	return (
-		<Box tb="p-[20] flex items-center justify-center h-full gap-[5]">
-			<TtfText
-				fontPath={"example_assets/raw_fonts/MartianMono.ttf"}
-				fontSize={20}
-			>
-				Hello World
-			</TtfText>
-			<Text>I've been up for {seconds} seconds now</Text>
-		</Box>
-	);
+   return (
+      <Box tb="p-[20] flex items-center justify-center h-full gap-[5]">
+         <TtfText
+            fontPath={"example_assets/raw_fonts/MartianMono.ttf"}
+            fontSize={20}
+         >
+            Hello World
+         </TtfText>
+         <Text>I've been up for {seconds} seconds now</Text>
+      </Box>
+   );
 }
 
 config();
 
 const [_, render] = await CreateRenderer({
-	host: process.env.DISPLAY_ADDRESS as string,
-	port: 81,
+   host: process.env.DISPLAY_ADDRESS as string,
+   port: 81,
 });
 
 render(<App />);
