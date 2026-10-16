@@ -1,23 +1,23 @@
 import { createCanvas, Image, ImageData } from "@napi-rs/canvas";
 
-interface GeekMagicAnimation {
+export interface GeekMagicAnimation {
 	height: number;
 	width: number;
 	frames: Frame[];
 }
 
-interface Frame {
+export interface Frame {
 	data: FramePixelData[];
 	predelay: number;
 }
 
-interface FramePixelData {
+export interface FramePixelData {
 	x: number;
 	y: number;
 	color: RGBA;
 }
 
-type RGBA = [number, number, number, number];
+export type RGBA = [number, number, number, number];
 
 const AnimFileMagicBytes = "GMPANIF1";
 

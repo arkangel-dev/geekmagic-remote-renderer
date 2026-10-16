@@ -4,6 +4,7 @@ import {
 	BuildAnimation,
 	SerializeAnimation,
 } from "@geekmagic-websocket/animation-builder/index.js";
+import { ExportAnimationFrames } from "@geekmagic-websocket/animation-builder/anim-verify.js";
 
 const frameFolder = "./example_assets/coin_frames";
 const frameFiles = readdirSync(frameFolder);
@@ -19,7 +20,14 @@ const finalAnimation = BuildAnimation({
 	predelay: 100,
 	width: 100,
 	height: 100,
+	delta: 10
 });
 
 const serializedAnimation = SerializeAnimation(finalAnimation);
-writeFileSync("./finalAnimation.bin", serializedAnimation);
+console.log(`Final size: ${serializedAnimation.length / 1024} KB`);
+
+
+// Convert it back
+// Use this
+// ffplay -loop 0 -framerate 12 -i 'frame_%03d.png' -vf "scale=800:800:flags=neighbor"
+ExportAnimationFrames(serializedAnimation, "./.test_exported_frames");
