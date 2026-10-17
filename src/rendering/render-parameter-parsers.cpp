@@ -1,6 +1,7 @@
 #include <rendering/render-parameter-parsers.h>
 #include <rendering/renderer-constants.h>
 #include <rendering/renderer-runtime.h>
+#include <rendering/render-animations.h>
 #include <setup_display.h>
 #include <debugging.h>
 #include <LittleFS.h>
@@ -774,7 +775,7 @@ namespace RenderParameterParsers
         RenderUtilities::ParameterArray params;
         if (!ReadParams(data, length, parameterCount, params))
         {
-            DebugLog.println(F("HandleDrawLFSRGB565: Failed to read parameters."));
+            DebugLog.println(F("HandleDrawGMPANIF1: Failed to read parameters."));
             return false;
         }
 
@@ -782,9 +783,21 @@ namespace RenderParameterParsers
         auto &yParam = params[RendererConsts::PARAM_Y];
         auto &filenameParam = params[RendererConsts::PARAM_FILE_NAME];
         auto &animationIdParam = params[RendererConsts::PARAM_ANIMATION_ID];
-        // TODO: Implement drawing
 
-        return false;
+        if (!xParam.present || !yParam.present || !filenameParam.present ||
+            filenameParam.length == 0 || filenameParam.length > 63 ||
+            !animationIdParam.present || animationIdParam.value >= RendererConsts::MAX_ANIMATIONS)
+        {
+            DebugLog.println(F("HandleDrawGMPANIF1: Missing or invalid parameters."));
+            return false;
+        }
+
+        char filename[64];
+        memcpy(filename, filenameParam.data, filenameParam.length);
+        filename[filenameParam.length] = '\0';
+
+        return AnimationRendering::StartAnimation(
+            (uint8_t)animationIdParam.value, (int16_t)xParam.value, (int16_t)yParam.value, filename);
     }
 
     bool HandleStopGMPANIF1(const uint8_t *data, size_t length, uint8_t parameterCount)
@@ -796,8 +809,13 @@ namespace RenderParameterParsers
             return false;
         }
         auto &animationIdParam = params[RendererConsts::PARAM_ANIMATION_ID];
-        // TODO: Implement stopping the GMPANIF1 animation based on animationIdParam
+        if (!animationIdParam.present || animationIdParam.value >= RendererConsts::MAX_ANIMATIONS)
+        {
+            DebugLog.println(F("HandleStopGMPANIF1: Missing or invalid animation id."));
+            return false;
+        }
 
-        return false;
+        AnimationRendering::StopAnimation((uint8_t)animationIdParam.value);
+        return true;
     }
 }

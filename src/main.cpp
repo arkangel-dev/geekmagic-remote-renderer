@@ -7,6 +7,7 @@
 #include <ArduinoOTA.h>
 #include <debugging.h>
 #include "callback_manager.h"
+#include <rendering/render-animations.h>
 // int buttonPin = 10; // GPIO4 = physical pin 19 on the ESP-12 module
 void setup()
 {
@@ -59,5 +60,6 @@ void loop()
 	webSocket.loop();
 	ArduinoOTA.handle();
 	TickCallbackActivity();
+	AnimationRendering::TickAnimations();
 	// delay(100);
 }

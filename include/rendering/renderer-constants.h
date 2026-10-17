@@ -7,6 +7,7 @@ namespace RendererConsts
     static constexpr uint16_t WIDTH = 240;
     static constexpr uint16_t HEIGHT = 240;
     static constexpr uint16_t MAX_SPRITES = 256;
+    static constexpr uint16_t MAX_ANIMATIONS = 256;
 
     enum OpType : uint8_t
     {
