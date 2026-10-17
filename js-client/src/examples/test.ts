@@ -20,7 +20,7 @@ const finalAnimation = BuildAnimation({
 	predelay: 100,
 	width: 240,
 	height: 240,
-	delta: 30
+	delta: 255
 });
 
 const serializedAnimation = SerializeAnimation(finalAnimation);
