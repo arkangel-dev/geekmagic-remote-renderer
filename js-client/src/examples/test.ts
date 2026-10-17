@@ -19,9 +19,9 @@ for (const file of frameFiles) {
 
 const finalAnimation = BuildAnimation({
 	raw_images: images,
-	predelay: 10,
-	width: 240,
-	height: 240,
+	predelay: 40,
+	width: 100,
+	height: 100,
 	delta: 30,
 	max_colors: 10,
 	quantizer: "mediancut",

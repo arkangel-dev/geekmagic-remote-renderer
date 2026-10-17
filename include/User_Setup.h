@@ -13,7 +13,7 @@
 #define TFT_RST   2      // GPIO2
 
 // SPI speed (safe)
-#define SPI_FREQUENCY  8000000
+#define SPI_FREQUENCY  27000000
 
 #define LOAD_FONT1   // default 8x16
 #define LOAD_FONT2   // small 16px

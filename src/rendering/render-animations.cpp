@@ -17,8 +17,9 @@ namespace AnimationRendering
 
         // Pixels drawn per animation per tick, so one big frame doesn't
         // stall the websocket and HTTP handlers in the main loop
-        constexpr uint16_t PIXEL_BUDGET_PER_TICK = 512;
-        constexpr uint8_t PIXEL_CHUNK = 32;
+        constexpr uint16_t PIXEL_BUDGET_PER_TICK = 2048;
+        constexpr uint8_t PIXEL_CHUNK = 80;
+        constexpr uint16_t MAX_SPAN = 256;
 
         /**
          * Only the playback cursor and the palette live in RAM.
@@ -102,21 +103,25 @@ namespace AnimationRendering
             if (!file.seek(state.pixel_offset))
                 return false;
 
-            // Horizontally adjacent pixels of the same color are
-            // merged into one line draw
-            bool hasRun = false;
-            int16_t runX = 0, runY = 0, runLength = 0;
-            uint16_t runColor = 0;
+            // Horizontally contiguous pixels are collected into a span and
+            // sent as one window write instead of one window per pixel
+            uint16_t span[MAX_SPAN];
+            uint16_t spanLength = 0;
+            int16_t spanX = 0, spanY = 0;
 
-            auto flushRun = [&]()
+            // The palette is native order; swap so it goes out big-endian
+            bool previousSwap = tft.getSwapBytes();
+            tft.setSwapBytes(true);
+
+            auto flushSpan = [&]()
             {
-                if (!hasRun)
+                if (spanLength == 0)
                     return;
-                if (runLength == 1)
-                    tft.drawPixel(state.origin_x + runX, state.origin_y + runY, runColor);
+                if (spanLength == 1)
+                    tft.drawPixel(state.origin_x + spanX, state.origin_y + spanY, span[0]);
                 else
-                    tft.drawFastHLine(state.origin_x + runX, state.origin_y + runY, runLength, runColor);
-                hasRun = false;
+                    tft.pushImage(state.origin_x + spanX, state.origin_y + spanY, spanLength, 1, span);
+                spanLength = 0;
             };
 
             uint16_t budget = PIXEL_BUDGET_PER_TICK;
@@ -147,18 +152,17 @@ namespace AnimationRendering
                         continue;
 
                     uint16_t color = state.palette[index];
-                    if (hasRun && py == runY && px == runX + runLength && color == runColor)
+                    if (spanLength > 0 && py == spanY && px == spanX + spanLength && spanLength < MAX_SPAN)
                     {
-                        runLength++;
+                        span[spanLength++] = color;
                         continue;
                     }
 
-                    flushRun();
-                    hasRun = true;
-                    runX = px;
-                    runY = py;
-                    runLength = 1;
-                    runColor = color;
+                    flushSpan();
+                    spanX = px;
+                    spanY = py;
+                    span[0] = color;
+                    spanLength = 1;
                 }
 
                 state.pixels_remaining -= count;
@@ -166,7 +170,8 @@ namespace AnimationRendering
                 budget -= count;
             }
 
-            flushRun();
+            flushSpan();
+            tft.setSwapBytes(previousSwap);
 
             if (state.pixels_remaining == 0)
                 state.frame_loaded = false;
