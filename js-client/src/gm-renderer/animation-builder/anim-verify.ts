@@ -27,7 +27,9 @@ export async function ExportAnimationFrames(
 	for (let i = 0; i < animation.frames.length; i++) {
 		const frame = animation.frames[i]!;
 
-		for (const { x, y, color } of frame.data) {
+		for (const { x, y, color_index } of frame.data) {
+			const color = animation.palette[color_index];
+			if (!color) throw new Error(`Color index ${color_index} out of range`);
 			const offset = (y * animation.width + x) * 4;
 			image.data.set(color, offset);
 		}
@@ -53,9 +55,29 @@ export function DeserializeAnimation(buffer: Uint8Array): GeekMagicAnimation {
 
 	const height = view.getUint8(8);
 	const width = view.getUint8(9);
-	const frameCount = view.getUint16(10, true);
+	const paletteSize = view.getUint8(10);
+	let offset = 11;
+	const palette: RGBA[] = [];
 
-	let offset = 12;
+	for (let i = 0; i < paletteSize; i++) {
+		const rgb565 = view.getUint16(offset, true);
+		offset += 2;
+
+		const r5 = (rgb565 >> 11) & 0x1f;
+		const g6 = (rgb565 >> 5) & 0x3f;
+		const b5 = rgb565 & 0x1f;
+
+		palette.push([
+			(r5 << 3) | (r5 >> 2),
+			(g6 << 2) | (g6 >> 4),
+			(b5 << 3) | (b5 >> 2),
+			255,
+		]);
+	}
+
+	const frameCount = view.getUint16(offset, true);
+	offset += 2;
+
 	const frames: Frame[] = [];
 
 	for (let i = 0; i < frameCount; i++) {
@@ -68,25 +90,22 @@ export function DeserializeAnimation(buffer: Uint8Array): GeekMagicAnimation {
 		for (let j = 0; j < pixelCount; j++) {
 			const x = view.getUint8(offset);
 			const y = view.getUint8(offset + 1);
-			const rgb565 = view.getUint16(offset + 2, true);
-			offset += 4;
+			const color_index = view.getUint8(offset + 2);
+			offset += 3;
 
-			const r5 = (rgb565 >> 11) & 0x1f;
-			const g6 = (rgb565 >> 5) & 0x3f;
-			const b5 = rgb565 & 0x1f;
+			if (color_index >= paletteSize) {
+				throw new Error(`Color index ${color_index} is outside palette bounds`);
+			}
 
-			const color: RGBA = [
-				(r5 << 3) | (r5 >> 2),
-				(g6 << 2) | (g6 >> 4),
-				(b5 << 3) | (b5 >> 2),
-				255,
-			];
-
-			data.push({ x, y, color });
+			data.push({ x, y, color_index });
 		}
 
 		frames.push({ data, predelay });
 	}
 
-	return { width, height, frames };
+	if (offset !== buffer.byteLength) {
+		throw new Error("Animation has trailing or missing bytes");
+	}
+
+	return { width, height, palette, frames };
 }

@@ -15,10 +15,10 @@ import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
-	ConvertToRGB565,
-	DownscaleBitdepth,
 	ResizeImage,
-} from "./image-editing/index.js";
+	DownscaleBitdepth,
+	ConvertToRGB565,
+} from "@geekmagic-websocket/image-editing/index.js";
 
 const IMAGE_CACHE_DIR = ".image-cache";
 const DEFAULT_COLOR_DEPTH = 8;

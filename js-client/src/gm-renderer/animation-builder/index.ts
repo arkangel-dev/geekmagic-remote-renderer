@@ -1,8 +1,16 @@
 import { createCanvas, Image, ImageData } from "@napi-rs/canvas";
+import {
+	GetClosestColorIndex,
+	KMeansPalette,
+	MedianCutPalette,
+	OctreePalette,
+	type GenerateColorPaletteBase,
+} from "./color_palette_builders.js";
 
 export interface GeekMagicAnimation {
 	height: number;
 	width: number;
+	palette: RGBA[];
 	frames: Frame[];
 }
 
@@ -14,7 +22,7 @@ export interface Frame {
 export interface FramePixelData {
 	x: number;
 	y: number;
-	color: RGBA;
+	color_index: number;
 }
 
 export type RGBA = [number, number, number, number];
@@ -36,6 +44,7 @@ export interface BuildAnimationOptions {
 	width?: number;
 	height?: number;
 	delta?: number;
+	quantizer?: "mediancut" | "kmeans" | "octree";
 }
 
 /**
@@ -45,6 +54,20 @@ export function BuildAnimation(
 	options: BuildAnimationOptions,
 ): GeekMagicAnimation {
 	const sample = options.raw_images[0];
+	let quantizer: (options: GenerateColorPaletteBase) => RGBA[];
+
+	switch (options.quantizer ?? "mediancut") {
+		case "mediancut":
+			quantizer = MedianCutPalette;
+			break;
+		case "kmeans":
+			quantizer = KMeansPalette;
+			break;
+		case "octree":
+			quantizer = OctreePalette;
+			break;
+	}
+
 	const startTime = Date.now();
 
 	if (!sample) {
@@ -54,6 +77,11 @@ export function BuildAnimation(
 	const width = options.width ?? sample.width;
 	const height = options.height ?? sample.height;
 	const delta = options.delta ?? 100;
+	const palette = quantizer({
+		raw_images: options.raw_images,
+		width,
+		height,
+	});
 
 	for (const frame of options.raw_images) {
 		if (frame.width !== sample.width || frame.height !== sample.height) {
@@ -94,7 +122,11 @@ export function BuildAnimation(
 			const color = samplePixel(firstImageData.data, y * width + x);
 
 			cacheFrame.push(color);
-			initialFrame.data.push({ x, y, color });
+			initialFrame.data.push({
+				x,
+				y,
+				color_index: GetClosestColorIndex({ palette, color }),
+			});
 		}
 	}
 
@@ -118,10 +150,14 @@ export function BuildAnimation(
 				}
 
 				cacheFrame[pixelIndex] = currentColor;
+				const color_index = GetClosestColorIndex({
+					palette,
+					color: currentColor,
+				});
 				frame.data.push({
 					x,
 					y,
-					color: currentColor,
+					color_index,
 				});
 			}
 		}
@@ -134,6 +170,7 @@ export function BuildAnimation(
 	console.log(`Animation build time: ${endTime - startTime} ms`);
 
 	return {
+		palette,
 		width,
 		height,
 		frames,
@@ -146,6 +183,7 @@ function ToRGB565([r, g, b]: RGBA): number {
 
 export function SerializeAnimation(animation: GeekMagicAnimation): Uint8Array {
 	const startTime = Date.now();
+
 	if (
 		animation.width < 1 ||
 		animation.width > 255 ||
@@ -159,11 +197,20 @@ export function SerializeAnimation(animation: GeekMagicAnimation): Uint8Array {
 		throw new Error("Frame count exceeds 65535");
 	}
 
-	const headerSize = 12;
-	const frameHeaderSize = 4;
-	const pixelSize = 4;
+	if (animation.palette.length > 255) {
+		throw new Error("Palette size exceeds 255");
+	}
 
-	let totalSize = headerSize;
+	const headerSize = 11;
+	const frameCountSize = 2;
+	const frameHeaderSize = 4;
+	const pixelSize = 3;
+	const paletteEntrySize = 2;
+
+	let totalSize =
+		headerSize +
+		animation.palette.length * paletteEntrySize +
+		frameCountSize;
 
 	for (const frame of animation.frames) {
 		if (frame.predelay < 0 || frame.predelay > 0xffff) {
@@ -181,16 +228,28 @@ export function SerializeAnimation(animation: GeekMagicAnimation): Uint8Array {
 	const view = new DataView(buffer);
 	const bytes = new Uint8Array(buffer);
 
+	// Write the 8-byte magic header.
 	for (let i = 0; i < AnimFileMagicBytes.length; i++) {
 		bytes[i] = AnimFileMagicBytes.charCodeAt(i);
 	}
 
+	// Write animation metadata.
 	view.setUint8(8, animation.height);
 	view.setUint8(9, animation.width);
-	view.setUint16(10, animation.frames.length, true);
+	view.setUint8(10, animation.palette.length);
 
 	let offset = headerSize;
 
+	// Write the global RGB565 palette.
+	for (const color of animation.palette) {
+		view.setUint16(offset, ToRGB565(color), true);
+		offset += paletteEntrySize;
+	}
+
+	view.setUint16(offset, animation.frames.length, true);
+	offset += frameCountSize;
+
+	// Write frame headers and pixel deltas.
 	for (const frame of animation.frames) {
 		view.setUint16(offset, frame.predelay, true);
 		view.setUint16(offset + 2, frame.data.length, true);
@@ -208,14 +267,23 @@ export function SerializeAnimation(animation: GeekMagicAnimation): Uint8Array {
 				);
 			}
 
+			if (
+				pixel.color_index < 0 ||
+				pixel.color_index >= animation.palette.length
+			) {
+				throw new Error(
+					`Color index ${pixel.color_index} is outside palette bounds`,
+				);
+			}
+
 			view.setUint8(offset, pixel.x);
 			view.setUint8(offset + 1, pixel.y);
-			view.setUint16(offset + 2, ToRGB565(pixel.color), true);
+			view.setUint8(offset + 2, pixel.color_index);
 			offset += pixelSize;
 		}
 	}
 
-	const endTime = Date.now();
-	console.log(`Animation serialization time: ${endTime - startTime} ms`);
+	console.log(`Animation serialization time: ${Date.now() - startTime} ms`);
+
 	return bytes;
 }

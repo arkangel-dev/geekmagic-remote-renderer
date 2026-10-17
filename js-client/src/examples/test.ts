@@ -5,6 +5,12 @@ import {
 	SerializeAnimation,
 } from "@geekmagic-websocket/animation-builder/index.js";
 import { ExportAnimationFrames } from "@geekmagic-websocket/animation-builder/anim-verify.js";
+import {
+	GeneratePalettePng,
+	KMeansPalette,
+	MedianCutPalette,
+	OctreePalette,
+} from "@geekmagic-websocket/animation-builder/color_palette_builders.js";
 
 const frameFolder = "./example_assets/coin_frames";
 const frameFiles = readdirSync(frameFolder);
@@ -15,17 +21,43 @@ for (const file of frameFiles) {
 	images.push(image);
 }
 
+// let start = Date.now();
+// let palette = MedianCutPalette({
+// 	raw_images: images,
+// 	height: 240,
+// 	width: 240,
+// });
+// console.log(`MedianCutPalette took ${Date.now() - start} ms`);
+// GeneratePalettePng(palette, "MedianCutPalette.png");
+
+// start = Date.now();
+// palette = KMeansPalette({
+// 	raw_images: images,
+// 	height: 240,
+// 	width: 240,
+// });
+// console.log(`KMeansPalette took ${Date.now() - start} ms`);
+// GeneratePalettePng(palette, "KMeansPalette.png");
+
+// start = Date.now();
+// palette = OctreePalette({
+// 	raw_images: images,
+// 	height: 240,
+// 	width: 240,
+// });
+// console.log(`OctreePalette took ${Date.now() - start} ms`);
+// GeneratePalettePng(palette, "OctreePalette.png");
+
 const finalAnimation = BuildAnimation({
 	raw_images: images,
 	predelay: 100,
 	width: 240,
 	height: 240,
-	delta: 255
+	delta: 30
 });
 
 const serializedAnimation = SerializeAnimation(finalAnimation);
 console.log(`Final size: ${serializedAnimation.length / 1024} KB`);
-
 
 // Convert it back
 // Use this
