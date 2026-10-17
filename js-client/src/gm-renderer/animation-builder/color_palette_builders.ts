@@ -8,6 +8,7 @@ export interface GenerateColorPaletteBase {
 	raw_images: Image[];
 	height: number;
 	width: number;
+	max_colors?: number;
 }
 
 /**
@@ -42,6 +43,7 @@ export function GetClosestColorIndex(options: {
 }
 
 export function MedianCutPalette(options: GenerateColorPaletteBase): RGBA[] {
+	const maxColors = options.max_colors ?? MAX_PALETTE_COLORS;
 	const { height, width } = options;
 	const canvas = createCanvas(width, height);
 	const ctx = canvas.getContext("2d");
@@ -95,7 +97,7 @@ export function MedianCutPalette(options: GenerateColorPaletteBase): RGBA[] {
 	}));
 
 	// No quantization is necessary if the image range has at most 256 colors.
-	if (colors.length <= MAX_PALETTE_COLORS) {
+	if (colors.length <= maxColors) {
 		return colors.map(({ rgba }) => rgba);
 	}
 
@@ -187,7 +189,7 @@ export function MedianCutPalette(options: GenerateColorPaletteBase): RGBA[] {
 
 	// Repeatedly split the group with the greatest channel range
 	// until we have 256 groups or cannot split any group further.
-	while (groups.length < MAX_PALETTE_COLORS) {
+	while (groups.length < maxColors) {
 		let selectedIndex = -1;
 		let selectedRange = -1;
 		let selectedChannel = 0;
@@ -283,8 +285,9 @@ function WeightedAverageColor(colors: Color[]): RGBA {
 
 // K-means quantization.
 export function KMeansPalette(options: GenerateColorPaletteBase): RGBA[] {
+	const maxColors = options.max_colors ?? MAX_PALETTE_COLORS;
 	const colors = BuildColorHistogram(options);
-	const k = Math.min(MAX_PALETTE_COLORS, colors.length);
+	const k = Math.min(maxColors, colors.length);
 
 	if (k === 0) return [];
 
@@ -395,9 +398,10 @@ function CreateOctreeNode(depth: number): OctreeNode {
 }
 
 export function OctreePalette(options: GenerateColorPaletteBase): RGBA[] {
+	const maxColors = options.max_colors ?? MAX_PALETTE_COLORS;
 	const colors = BuildColorHistogram(options);
 
-	if (colors.length <= MAX_PALETTE_COLORS) {
+	if (colors.length <= maxColors) {
 		return colors.map(({ rgba }) => rgba);
 	}
 
@@ -473,7 +477,7 @@ export function OctreePalette(options: GenerateColorPaletteBase): RGBA[] {
 	};
 
 	// Collapse deepest branches until at most 256 leaves remain.
-	while (leafCount > MAX_PALETTE_COLORS) {
+	while (leafCount > maxColors) {
 		const candidate = findReductionCandidate(root);
 
 		if (!candidate) break;

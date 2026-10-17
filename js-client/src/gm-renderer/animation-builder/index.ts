@@ -43,8 +43,10 @@ export interface BuildAnimationOptions {
 	raw_images: Image[];
 	width?: number;
 	height?: number;
+	/** Optional extra filter: ignore changes whose raw RGBA drift is within this value. */
 	delta?: number;
 	quantizer?: "mediancut" | "kmeans" | "octree";
+	max_colors?: number;
 }
 
 /**
@@ -76,11 +78,12 @@ export function BuildAnimation(
 
 	const width = options.width ?? sample.width;
 	const height = options.height ?? sample.height;
-	const delta = options.delta ?? 100;
+	const delta = options.delta;
 	const palette = quantizer({
 		raw_images: options.raw_images,
 		width,
 		height,
+		max_colors: options.max_colors ?? 255,
 	});
 
 	for (const frame of options.raw_images) {
@@ -110,6 +113,7 @@ export function BuildAnimation(
 
 	const firstImageData = getImageData(sample);
 	const cacheFrame: RGBA[] = [];
+	const cacheIndex: number[] = [];
 	const frames: Frame[] = [];
 
 	const initialFrame: Frame = {
@@ -121,12 +125,11 @@ export function BuildAnimation(
 		for (let x = 0; x < width; x++) {
 			const color = samplePixel(firstImageData.data, y * width + x);
 
+			const color_index = GetClosestColorIndex({ palette, color });
+
 			cacheFrame.push(color);
-			initialFrame.data.push({
-				x,
-				y,
-				color_index: GetClosestColorIndex({ palette, color }),
-			});
+			cacheIndex.push(color_index);
+			initialFrame.data.push({ x, y, color_index });
 		}
 	}
 
@@ -143,17 +146,26 @@ export function BuildAnimation(
 			for (let x = 0; x < width; x++) {
 				const pixelIndex = y * width + x;
 				const currentColor = samplePixel(imageData.data, pixelIndex);
-				const previousColor = cacheFrame[pixelIndex]!;
-
-				if (AllowDelta(previousColor, currentColor, delta)) {
-					continue;
-				}
-
-				cacheFrame[pixelIndex] = currentColor;
 				const color_index = GetClosestColorIndex({
 					palette,
 					color: currentColor,
 				});
+
+				// A pixel only changes if it maps to a different palette entry
+				if (color_index === cacheIndex[pixelIndex]) {
+					continue;
+				}
+
+				// Optionally ignore small raw color drifts as well
+				if (
+					delta !== undefined &&
+					AllowDelta(cacheFrame[pixelIndex]!, currentColor, delta)
+				) {
+					continue;
+				}
+
+				cacheFrame[pixelIndex] = currentColor;
+				cacheIndex[pixelIndex] = color_index;
 				frame.data.push({
 					x,
 					y,
