@@ -768,4 +768,36 @@ namespace RenderParameterParsers
         file.close();
         return success;
     }
+
+    bool HandleDrawGMPANIF1(const uint8_t *data, size_t length, uint8_t parameterCount)
+    {
+        RenderUtilities::ParameterArray params;
+        if (!ReadParams(data, length, parameterCount, params))
+        {
+            DebugLog.println(F("HandleDrawLFSRGB565: Failed to read parameters."));
+            return false;
+        }
+
+        auto &xParam = params[RendererConsts::PARAM_X];
+        auto &yParam = params[RendererConsts::PARAM_Y];
+        auto &filenameParam = params[RendererConsts::PARAM_FILE_NAME];
+        auto &animationIdParam = params[RendererConsts::PARAM_ANIMATION_ID];
+        // TODO: Implement drawing
+
+        return false;
+    }
+
+    bool HandleStopGMPANIF1(const uint8_t *data, size_t length, uint8_t parameterCount)
+    {
+        RenderUtilities::ParameterArray params;
+        if (!ReadParams(data, length, parameterCount, params))
+        {
+            DebugLog.println(F("HandleDrawLFSRGB565: Failed to read parameters."));
+            return false;
+        }
+        auto &animationIdParam = params[RendererConsts::PARAM_ANIMATION_ID];
+        // TODO: Implement stopping the GMPANIF1 animation based on animationIdParam
+
+        return false;
+    }
 }

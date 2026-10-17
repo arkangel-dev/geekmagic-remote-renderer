@@ -166,6 +166,22 @@ bool RenderContent(
                     parameterCount);
             break;
 
+        case RendererConsts::OP_DRAW_GMPANIF1:
+            success =
+                RenderParameterParsers::HandleDrawGMPANIF1(
+                    data + operationStart,
+                    length - operationStart,
+                    parameterCount);
+            break;
+
+        case RendererConsts::OP_STOP_GMPANIF1:
+            success =
+                RenderParameterParsers::HandleStopGMPANIF1(
+                    data + operationStart,
+                    length - operationStart,
+                    parameterCount);
+            break;
+
         default:
             DebugLog.print(
                 F("RenderContent: unsupported operation: "));

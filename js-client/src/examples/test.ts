@@ -21,7 +21,7 @@ const finalAnimation = BuildAnimation({
 	width: 100,
 	height: 100,
 	delta: 30,
-	max_colors: 100,
+	max_colors: 10,
 	quantizer: 'mediancut',
 });
 

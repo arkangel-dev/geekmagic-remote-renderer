@@ -26,4 +26,6 @@ namespace RenderParameterParsers
     bool HandleRegisterGpioCallback(const uint8_t *data, size_t length, uint8_t parameterCount);
     bool HandleClearGpioCallback(const uint8_t *data, size_t length, uint8_t parameterCount);
     bool HandleDrawLFSRGB565(const uint8_t *data, size_t length, uint8_t parameterCount);
+    bool HandleDrawGMPANIF1(const uint8_t *data, size_t length, uint8_t parameterCount);
+    bool HandleStopGMPANIF1(const uint8_t *data, size_t length, uint8_t parameterCount);
 }
