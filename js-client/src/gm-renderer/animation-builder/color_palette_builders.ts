@@ -52,6 +52,7 @@ export function MedianCutPalette(options: GenerateColorPaletteBase): RGBA[] {
 
 	const getImageData = (image: Image): ImageData => {
 		ctx.clearRect(0, 0, width, height);
+		ctx.imageSmoothingEnabled = false;
 		ctx.drawImage(image, 0, 0, width, height);
 		return ctx.getImageData(0, 0, width, height);
 	};
@@ -242,6 +243,7 @@ function BuildColorHistogram(options: GenerateColorPaletteBase): Color[] {
 
 	for (const image of options.raw_images) {
 		ctx.clearRect(0, 0, width, height);
+		ctx.imageSmoothingEnabled = false;
 		ctx.drawImage(image, 0, 0, width, height);
 
 		const data = ctx.getImageData(0, 0, width, height).data;

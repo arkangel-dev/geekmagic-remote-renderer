@@ -107,6 +107,7 @@ export function BuildAnimation(
 
 	const getImageData = (image: Image): ImageData => {
 		ctx.clearRect(0, 0, width, height);
+		ctx.imageSmoothingEnabled = false;
 		ctx.drawImage(image, 0, 0, width, height);
 		return ctx.getImageData(0, 0, width, height);
 	};

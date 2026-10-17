@@ -8,7 +8,7 @@ import { ExportAnimationFrames } from "@geekmagic-websocket/animation-builder/an
 import { config } from "dotenv";
 import CreateRenderer from "@geekmagic-react/create-renderer.js";
 
-const frameFolder = "./example_assets/coin_frames";
+const frameFolder = "./example_assets/zombie_frames";
 const frameFiles = readdirSync(frameFolder);
 const images: Image[] = [];
 for (const file of frameFiles) {
@@ -19,11 +19,11 @@ for (const file of frameFiles) {
 
 const finalAnimation = BuildAnimation({
 	raw_images: images,
-	predelay: 40,
-	width: 100,
-	height: 100,
+	predelay: 100,
+	width: 120,
+	height: 120,
 	delta: 30,
-	max_colors: 10,
+	max_colors: 60,
 	quantizer: "mediancut",
 });
 
@@ -49,12 +49,12 @@ const [renderer, _] = await CreateRenderer({
 
 
 
-await renderer.WipeAssetsAsync();
-await renderer.UploadAssetAsync("./ser.bin");
+// await renderer.WipeAssetsAsync();
+// await renderer.UploadAssetAsync("./ser.bin");
 renderer.StartAnimation({
 	animationId: 0,
-	x: 0,
-	y: 0,
+	x: 50,
+	y: 125,
 	file: "ser.bin",
 });
 renderer.Send();
