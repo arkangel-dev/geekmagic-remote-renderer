@@ -19,6 +19,8 @@ import type {
 	RegisterPinStateChangeData,
 	UnregisterPinStateChangeData,
 	DrawRGB565Data,
+	StartAnimationData,
+	StopAnimationData,
 } from "./types.js";
 import { existsSync, readFile, readFileSync } from "node:fs";
 
@@ -380,6 +382,31 @@ export class GeekMagicRenderer {
 				this.paramU16(ParameterCodes.PARAM_PIN_ID, props.pin),
 			]),
 		);
+		return this;
+	}
+
+	StartAnimation(props: StartAnimationData): GeekMagicRenderer {
+		this.operation_buffer.push(
+			Buffer.concat([
+				Buffer.from([OperationCodes.OP_DRAW_GMPANIF1, 4]),
+				this.paramU16(ParameterCodes.PARAM_X, props.x),
+				this.paramU16(ParameterCodes.PARAM_Y, props.y),
+				this.paramU16(ParameterCodes.PARAM_ANIMATION_ID, props.animationId),
+				this.paramText(ParameterCodes.PARAM_FILENAME, props.file),
+			]),
+		);
+
+		return this;
+	}
+
+	StopAnimation(props: StopAnimationData): GeekMagicRenderer {
+		this.operation_buffer.push(
+			Buffer.concat([
+				Buffer.from([OperationCodes.OP_STOP_GMPANIF1, 1]),
+				this.paramU16(ParameterCodes.PARAM_ANIMATION_ID, props.animationId),
+			]),
+		);
+
 		return this;
 	}
 

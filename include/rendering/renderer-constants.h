@@ -54,6 +54,6 @@ namespace RendererConsts
         PARAM_PIN_ID = 0x13,
         PARAM_ANIMATION_ID = 0x14,
 
-        PARAM_COUNT = 20
+        PARAM_COUNT = 21
     };
 }

@@ -83,3 +83,13 @@ export interface UnregisterPinStateChangeData {
 	pin: number;
 	callback?: (state: boolean) => void;
 }
+
+export interface StartAnimationData {
+	x: number;
+	y: number;
+	animationId: number;
+	file: string;
+}
+export interface StopAnimationData {
+	animationId: number;
+}

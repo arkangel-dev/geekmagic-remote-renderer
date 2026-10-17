@@ -5,6 +5,8 @@ import {
 	SerializeAnimation,
 } from "@geekmagic-websocket/animation-builder/index.js";
 import { ExportAnimationFrames } from "@geekmagic-websocket/animation-builder/anim-verify.js";
+import { config } from "dotenv";
+import CreateRenderer from "@geekmagic-react/create-renderer.js";
 
 const frameFolder = "./example_assets/coin_frames";
 const frameFiles = readdirSync(frameFolder);
@@ -17,18 +19,44 @@ for (const file of frameFiles) {
 
 const finalAnimation = BuildAnimation({
 	raw_images: images,
-	predelay: 100,
-	width: 100,
-	height: 100,
+	predelay: 10,
+	width: 240,
+	height: 240,
 	delta: 30,
 	max_colors: 10,
-	quantizer: 'mediancut',
+	quantizer: "mediancut",
 });
 
 const serializedAnimation = SerializeAnimation(finalAnimation);
-console.log(`Final size: ${serializedAnimation.length / 1024} KB`);
+
+//
+
+// console.log(`Final size: ${serializedAnimation.length / 1024} KB`);
 
 // Convert it back
 // Use this
 // ffplay -loop 0 -framerate 12 -i 'frame_%03d.png' -vf "scale=800:800:flags=neighbor"
-ExportAnimationFrames(serializedAnimation, "./.test_exported_frames");
+// ExportAnimationFrames(serializedAnimation, "./.test_exported_frames");
+
+// Write to a file
+writeFileSync("./ser.bin", serializedAnimation);
+
+config();
+const [renderer, _] = await CreateRenderer({
+	host: process.env.DISPLAY_ADDRESS as string,
+	port: 81,
+});
+
+
+
+await renderer.WipeAssetsAsync();
+await renderer.UploadAssetAsync("./ser.bin");
+renderer.StartAnimation({
+	animationId: 0,
+	x: 0,
+	y: 0,
+	file: "ser.bin",
+});
+renderer.Send();
+
+console.log("Asset uploaded successfully.");
