@@ -82,7 +82,7 @@ export default async function CreateRenderer(props: {
 		// is available for when commits are triggered via 
 		// state updates from the box
 		asyncLocalStorage.run({ renderer }, () => RenderContent(container, renderer));
-		console.log(PrintTree(container));
+		// console.log(PrintTree(container));
 	});
 
 	const moddedCallback = (element: React.ReactNode) => {

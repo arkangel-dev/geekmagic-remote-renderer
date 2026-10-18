@@ -147,6 +147,10 @@ function visit(
 			case "imageBox":
 				RenderImageBox(renderContext);
 				break;
+
+			case "frameAnimationBox":
+				RenderFrameAnimationBox(renderContext);
+				break;
 		}
 	}
 
@@ -213,5 +217,15 @@ function RenderImageBox(ctx: RenderPrimitiveElementProps) {
 		width: node.props.width as number,
 		height: node.props.height as number,
 		file: node.props.src as string,
+	});
+}
+
+function RenderFrameAnimationBox(ctx: RenderPrimitiveElementProps) {
+	const { node, absoluteLayout, renderer } = ctx;
+	renderer.StartAnimation({
+		x: Math.round(absoluteLayout.left),
+		y: Math.round(absoluteLayout.top),
+		file: node.props.src as string,
+		animationId: node.props.animationId as number,
 	});
 }

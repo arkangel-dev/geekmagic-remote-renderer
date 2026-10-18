@@ -214,37 +214,45 @@ export function FrameAnimation(props: FrameAnimationProps) {
 			if (cancelled) return;
 			const destination = `${ASSET_CACHE_DIR}/${final_asset_name}.bin`;
 
-			if (!existsSync(destination)) {
-				// Read all the frame files from the source directory
-				const frameFiles = readdirSync(props.src);
-				const images: Image[] = [];
-				for (const file of frameFiles) {
-					const filePath = `${props.src}/${file}`;
-					const extension = filePath.split(".").pop()?.toLowerCase();
-					if (!extension) continue;
-					if (!allowed_frame_types.includes(extension)) continue;
-					const image = await loadImage(filePath);
-					images.push(image);
+			const asset_list = await renderer.ListAssetsAsync();
+			if (!asset_list.map((x) => x.name).includes(`${final_asset_name}.bin`)) {
+				if (!existsSync(destination)) {
+					// Read all the frame files from the source directory
+					const frameFiles = readdirSync(props.src);
+					const images: Image[] = [];
+					if (cancelled) return;
+					for (const file of frameFiles) {
+						const filePath = `${props.src}/${file}`;
+						const extension = filePath.split(".").pop()?.toLowerCase();
+						if (!extension) continue;
+						if (!allowed_frame_types.includes(extension)) continue;
+						const image = await loadImage(filePath);
+						images.push(image);
+					}
+
+					// Build the final animation from the loaded images
+					const final_animation = await BuildAnimation({
+						raw_images: images,
+						predelay: frame_rate,
+						width: props.width,
+						height: props.height,
+						delta: max_delta,
+						max_colors: max_colors,
+						quantizer: quantizer,
+					});
+
+					// Serialize the animation to the GMPANIF1
+					// fromat and save it
+					const serialized_animation = SerializeAnimation(final_animation);
+					await writeFile(destination, serialized_animation);
+				} else {
+					console.log(`Asset ${destination} already exists locally`);
 				}
-
-				// Build the final animation from the loaded images
-				const final_animation = await BuildAnimation({
-					raw_images: images,
-					predelay: frame_rate,
-					width: props.width,
-					height: props.height,
-					delta: max_delta,
-					max_colors: max_colors,
-					quantizer: quantizer,
-				});
-
-				// Serialize the animation to the GMPANIF1
-				// fromat and save it
-				const serialized_animation = SerializeAnimation(final_animation);
-				await writeFile(destination, serialized_animation);
+				await renderer.UploadAssetAsync(destination);
+			} else {
+				console.log(`Asset ${destination} already exists on display`);
 			}
 
-			await renderer.UploadAssetAsync(destination);
 			setIsReady(true);
 		}
 		buildAnimation().catch((error) =>
@@ -256,5 +264,10 @@ export function FrameAnimation(props: FrameAnimationProps) {
 		};
 	});
 
-	return <frameAnimationBox {...props} />;
+	return (
+		<frameAnimationBox
+			src={final_asset_name + '.bin'}
+			animationId={animation_id.current}
+		/>
+	);
 }
