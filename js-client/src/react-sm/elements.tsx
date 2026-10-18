@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type {
 	BoxProps,
 	ColumnElementProps,
@@ -264,6 +264,16 @@ export function FrameAnimation(props: FrameAnimationProps) {
 		return () => {
 			cancelled = true;
 			setIsReady(false);
+		};
+	}, [final_asset_name, renderer]);
+
+	// Use layoutEffect to
+	// stop the animation before the component actually
+	// gets removed from the component tree.
+	// That way the animations black blit doesn't impact
+	// the next frame that gets rendered.
+	useLayoutEffect(() => {
+		return () => {
 			renderer
 				.StopAnimation({
 					animationId: animation_id.current,
