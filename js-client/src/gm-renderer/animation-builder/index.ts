@@ -38,6 +38,8 @@ function AllowDelta(previous: RGBA, current: RGBA, delta: number): boolean {
 	);
 }
 
+export type AvailableQuantizerNames = "mediancut" | "kmeans" | "octree";
+
 export interface BuildAnimationOptions {
 	predelay: number;
 	raw_images: Image[];
@@ -45,7 +47,7 @@ export interface BuildAnimationOptions {
 	height?: number;
 	/** Optional extra filter: ignore changes whose raw RGBA drift is within this value. */
 	delta?: number;
-	quantizer?: "mediancut" | "kmeans" | "octree";
+	quantizer?: AvailableQuantizerNames;
 	max_colors?: number;
 }
 
@@ -221,9 +223,7 @@ export function SerializeAnimation(animation: GeekMagicAnimation): Uint8Array {
 	const paletteEntrySize = 2;
 
 	let totalSize =
-		headerSize +
-		animation.palette.length * paletteEntrySize +
-		frameCountSize;
+		headerSize + animation.palette.length * paletteEntrySize + frameCountSize;
 
 	for (const frame of animation.frames) {
 		if (frame.predelay < 0 || frame.predelay > 0xffff) {

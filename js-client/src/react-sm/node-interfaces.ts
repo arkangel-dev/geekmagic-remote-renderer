@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { Node as YogaNode } from "yoga-layout";
 import type { Styles } from "./styles.js";
+import type { AvailableQuantizerNames } from "@geekmagic-websocket/animation-builder/index.js";
 
 export type AllowedStyleValue = string | number;
 export type AllowedStyleProperty =
@@ -79,6 +80,16 @@ export interface ImageBoxProps extends BaseGeekNode {
 	colorDepth?: number;
 	height: number;
 	width: number;
+}
+
+export interface FrameAnimationProps extends BaseGeekNode {
+	src: string;
+	max_delta?: number;
+	max_colors?: number;
+	height: number;
+	width: number;
+	frameRate?: number;
+	quantizer?: AvailableQuantizerNames;
 }
 
 export interface HostNodeBase {

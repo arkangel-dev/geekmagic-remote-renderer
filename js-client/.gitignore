@@ -2,3 +2,4 @@ node_modules
 .image-cache
 .env
 .test_exported_frames
+.asset_cache
