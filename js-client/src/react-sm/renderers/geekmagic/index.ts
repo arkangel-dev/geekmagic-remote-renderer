@@ -222,6 +222,7 @@ function RenderImageBox(ctx: RenderPrimitiveElementProps) {
 
 function RenderFrameAnimationBox(ctx: RenderPrimitiveElementProps) {
 	const { node, absoluteLayout, renderer } = ctx;
+	console.log(`Starting animation with file: ${node.props.src} and animationId: ${node.props.animationId}`);
 	renderer.StartAnimation({
 		x: Math.round(absoluteLayout.left),
 		y: Math.round(absoluteLayout.top),

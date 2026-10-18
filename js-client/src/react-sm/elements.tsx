@@ -260,13 +260,18 @@ export function FrameAnimation(props: FrameAnimationProps) {
 		);
 		return () => {
 			// TODO: Also stop the animation loop on the display side
+			renderer
+				.StopAnimation({
+					animationId: animation_id.current,
+				})
+				.Send();
 			cancelled = true;
 		};
 	});
 
 	return (
 		<frameAnimationBox
-			src={final_asset_name + '.bin'}
+			src={final_asset_name + ".bin"}
 			animationId={animation_id.current}
 		/>
 	);

@@ -5,23 +5,31 @@ import { config } from "dotenv";
 import { useState } from "react";
 
 function App() {
-	const [count, setCount] = useState(0);
+	const [isRunning, setIsRunning] = useState(false);
 
 	// 10 refers to GPIO pin 10, not
 	// the 10th pin on the ESP12F board
 	useButton({
 		pin: 10,
-		onPress: () => setCount((prev) => prev + 1),
-		onLongPress: () => setCount(0),
+		onPress: () => {
+            console.log("Button pressed");
+            setIsRunning((prev) => !prev)
+        },
+        onLongPress: () => {
+            console.log("Button long pressed");
+            setIsRunning(false);
+        }
 	});
 
 	return (
 		<Box tb={"p-[20] flex items-center justify-center h-full"}>
-			<FrameAnimation
-				src={"./example_assets/zombie_frames"}
-				height={100}
-				width={100}
-			/>
+			{isRunning && (
+				<FrameAnimation
+					src={"./example_assets/zombie_frames"}
+					height={100}
+					width={100}
+				/>
+			)}
 		</Box>
 	);
 }
