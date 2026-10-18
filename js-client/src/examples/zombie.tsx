@@ -26,8 +26,8 @@ function App() {
 			{isRunning && (
 				<FrameAnimation
 					src={"./example_assets/zombie_frames"}
-					height={100}
-					width={100}
+					height={30}
+					width={30}
 				/>
 			)}
 		</Box>

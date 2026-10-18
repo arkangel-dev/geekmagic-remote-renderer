@@ -195,14 +195,17 @@ export function FrameAnimation(props: FrameAnimationProps) {
 
 	const final_asset_name = useMemo(() => {
 		// set this to md5 hash of the source path + palette_size + quantizer
-		return crypto
-			.createHash("md5")
-			.update(
-				`${props.src}-${props.height}-${props.width}-${max_colors}-${quantizer}-${max_delta}-${frame_rate}`,
-			)
-			.digest("hex")
-			.slice(0, 8);
-	}, [props]);
+		const key = `${props.src}-${props.height}-${props.width}-${max_colors}-${quantizer}-${max_delta}-${frame_rate}`;
+		return crypto.createHash("md5").update(key).digest("hex").slice(0, 8);
+	}, [
+		props.src,
+		props.height,
+		props.width,
+		max_colors,
+		quantizer,
+		max_delta,
+		frame_rate,
+	]);
 
 	const allowed_frame_types = ["png", "jpg", "jpeg", "bmp"];
 
@@ -233,7 +236,7 @@ export function FrameAnimation(props: FrameAnimationProps) {
 					// Build the final animation from the loaded images
 					const final_animation = await BuildAnimation({
 						raw_images: images,
-						predelay: frame_rate,
+						predelay: Math.round(1000 / frame_rate),
 						width: props.width,
 						height: props.height,
 						delta: max_delta,
@@ -259,20 +262,24 @@ export function FrameAnimation(props: FrameAnimationProps) {
 			console.error(`Failed to build animation ${props.src}:`, error),
 		);
 		return () => {
-			// TODO: Also stop the animation loop on the display side
+			cancelled = true;
+			setIsReady(false);
 			renderer
 				.StopAnimation({
 					animationId: animation_id.current,
 				})
 				.Send();
-			cancelled = true;
 		};
-	});
+	}, [final_asset_name, renderer]);
 
+	// Only start playback once the animation file is on the display
+	if (!isReady) return null;
 	return (
 		<frameAnimationBox
 			src={final_asset_name + ".bin"}
 			animationId={animation_id.current}
+			width={props.width}
+			height={props.height}
 		/>
 	);
 }

@@ -50,7 +50,8 @@ export function CreateYogaNode(props: Record<string, unknown>, type?: string) {
 		);
 	}
 
-	if (type === "imageBox") applyImageBoxSize(yogaNode, props);
+	if (type === "imageBox" || type === "frameAnimationBox")
+		applyImageBoxSize(yogaNode, props);
 
 	return [style as Styles, yogaNode] as const;
 }
