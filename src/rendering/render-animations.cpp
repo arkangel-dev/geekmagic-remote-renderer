@@ -30,6 +30,8 @@ namespace AnimationRendering
             char filename[FILENAME_MAX_LENGTH + 1];
             int16_t origin_x;
             int16_t origin_y;
+            uint8_t width;
+            uint8_t height;
             uint16_t frame_count;
             uint16_t palette_size;
             uint16_t *palette;
@@ -71,7 +73,7 @@ namespace AnimationRendering
                 return;
 
             free(state->palette);
-            delete state;
+            free(state);
             animations[animationId] = nullptr;
         }
 
@@ -254,7 +256,7 @@ namespace AnimationRendering
         }
         file.close();
 
-        AnimationState *state = new (std::nothrow) AnimationState();
+        AnimationState *state = (AnimationState *)malloc(sizeof(AnimationState));
         if (state == nullptr)
         {
             free(palette);
@@ -265,10 +267,20 @@ namespace AnimationRendering
         strcpy(state->filename, filename);
         state->origin_x = x;
         state->origin_y = y;
+        state->height = header[MAGIC_SIZE];
+        state->width = header[MAGIC_SIZE + 1];
         state->palette = palette;
         state->palette_size = paletteSize;
         state->frame_count = ReadU16(frameCountBytes);
         state->next_header_offset = MAGIC_SIZE + 3 + (uint32_t)paletteSize * 2 + 2;
+
+        AnimationState *previous = animations[animationId];
+        if (previous != nullptr &&
+            (previous->origin_x != state->origin_x || previous->origin_y != state->origin_y ||
+             previous->width != state->width || previous->height != state->height))
+        {
+            tft.fillRect(previous->origin_x, previous->origin_y, previous->width, previous->height, TFT_BLACK);
+        }
 
         Release(animationId);
         animations[animationId] = state;
@@ -277,8 +289,13 @@ namespace AnimationRendering
 
     void StopAnimation(uint8_t animationId)
     {
-        if (animationId < RendererConsts::MAX_ANIMATIONS)
-            Release(animationId);
+        if (animationId >= RendererConsts::MAX_ANIMATIONS)
+            return;
+
+        AnimationState *state = animations[animationId];
+        if (state != nullptr)
+            tft.fillRect(state->origin_x, state->origin_y, state->width, state->height, TFT_BLACK);
+        Release(animationId);
     }
 
     void TickAnimations()
