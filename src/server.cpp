@@ -16,6 +16,8 @@
 #include <http-services/content-renderer.h>
 #include <http-services/file-management.h>
 #include "server.h"
+#include "callback_manager.h"
+#include <rendering/render-animations.h>
 
 WebSocketsServer webSocket(81);
 ESP8266WebServer server(80);
@@ -190,6 +192,8 @@ void WebSocketEvent(
   case WStype_CONNECTED:
     DebugLog.print(F("WebSocket client connected: "));
     DebugLog.println(client);
+    UnregisterAllCallbackPins();
+    AnimationRendering::StopAllAnimations();
     break;
 
   case WStype_DISCONNECTED:

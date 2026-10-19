@@ -17,6 +17,11 @@ namespace AnimationRendering
     void StopAnimation(uint8_t animationId);
 
     /**
+     * Stops every running animation and releases their memory
+     */
+    void StopAllAnimations();
+
+    /**
      * Advances all running animations by the milliseconds elapsed since
      * the previous call. Called from the main loop.
      */

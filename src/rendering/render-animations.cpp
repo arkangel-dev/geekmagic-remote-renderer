@@ -298,6 +298,12 @@ namespace AnimationRendering
         Release(animationId);
     }
 
+    void StopAllAnimations()
+    {
+        for (uint16_t id = 0; id < RendererConsts::MAX_ANIMATIONS; ++id)
+            StopAnimation((uint8_t)id);
+    }
+
     void TickAnimations()
     {
         uint32_t now = millis();
