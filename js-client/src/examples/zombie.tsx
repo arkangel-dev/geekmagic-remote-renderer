@@ -38,18 +38,18 @@ function App() {
 
 
 	return (
-		<Box tb={"flex items-center justify-center h-full"}>
+		<Box tb={"flex items-center justify-center h-full gap-[10]"}>
 			<FrameAnimation
 				src={"./example_assets/zombie_frames"}
-				height={120}
-				width={120}
+				height={31 * 4}
+				width={25 * 4}
 				frameRate={10}
 			/>
 			<Column align="center" justify="center">
 				<TtfText
 					fontPath={"./example_assets/raw_fonts/JollyLodger.ttf"}
 					fontSize={60}
-					tb={"text-[#baba37]"}
+					tb={"text-[#F3D040]"}
 				>
 					{time}
 				</TtfText>
@@ -57,7 +57,7 @@ function App() {
 				<TtfText
 					fontPath={"./example_assets/raw_fonts/JollyLodger.ttf"}
 					fontSize={30}
-					tb={"text-[#5ab19a]"}
+					tb={"text-[#2EA082]"}
 				>
 					{date}
 				</TtfText>
