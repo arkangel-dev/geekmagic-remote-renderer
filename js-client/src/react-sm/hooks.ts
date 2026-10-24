@@ -20,7 +20,7 @@ export function useUploadAsset(options: { path: string }) {
 	useEffect(() => {
 		let cancelled = false;
 		async function upload() {
-			ctx.setIsAssetLoading(true);
+			ctx.setIsAssetLoading((count) => count + 1);
 			try {
 				const assets = await ctx.renderer.ListAssetsAsync();
 				const assetName = options.path.split("/").pop()!;
@@ -31,7 +31,7 @@ export function useUploadAsset(options: { path: string }) {
 			} catch {
 				if (!cancelled) setUploaded({ uploaded: false, failed: true });
 			} finally {
-				ctx.setIsAssetLoading(false);
+				ctx.setIsAssetLoading((count) => count - 1);
 			}
 		}
 		void upload();

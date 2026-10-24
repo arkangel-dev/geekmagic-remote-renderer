@@ -10,7 +10,12 @@ import type {
 	TextProps,
 	TffFontTextProps,
 } from "./node-interfaces.js";
-import { useRenderer, useRequestFont } from "./hooks.js";
+import {
+	useGeekMagicContext,
+	useRenderer,
+	useRequestFont,
+	useUploadAsset,
+} from "./hooks.js";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { existsSync, readdirSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -210,7 +215,7 @@ export function FrameAnimation(props: FrameAnimationProps) {
 	const allowed_frame_types = ["png", "jpg", "jpeg", "bmp"];
 
 	const renderer = useRenderer();
-
+	const context = useGeekMagicContext();
 	useEffect(() => {
 		let cancelled = false;
 		async function buildAnimation() {
@@ -258,9 +263,13 @@ export function FrameAnimation(props: FrameAnimationProps) {
 
 			setIsReady(true);
 		}
-		buildAnimation().catch((error) =>
-			console.error(`Failed to build animation ${props.src}:`, error),
-		);
+
+		context.setIsAssetLoading((count) => count + 1);
+		buildAnimation()
+			.catch((error) =>
+				console.error(`Failed to build animation ${props.src}:`, error),
+			)
+			.finally(() => context.setIsAssetLoading((count) => count - 1));
 		return () => {
 			cancelled = true;
 			setIsReady(false);

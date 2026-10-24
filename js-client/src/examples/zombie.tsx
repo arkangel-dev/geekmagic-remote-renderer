@@ -1,17 +1,70 @@
 import CreateRenderer from "@geekmagic-react/create-renderer.js";
-import { Box, FrameAnimation, Text } from "@geekmagic-react/elements.js";
-import { useButton } from "@geekmagic-react/hooks.js";
+import {
+	Box,
+	Column,
+	FrameAnimation,
+	Row,
+	Text,
+	TtfText,
+} from "@geekmagic-react/elements.js";
+import { useButton, useIsAssetLoading } from "@geekmagic-react/hooks.js";
 import { config } from "dotenv";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function App() {
+	const [time, setTime] = useState("12:30");
+	const [date, setDate] = useState("Friday, Oct 10");
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			const now = new Date();
+			setTime(
+				now.toLocaleTimeString([], {
+					hour: "2-digit",
+					minute: "2-digit",
+					hour12: false,
+				}),
+			);
+			setDate(
+				now.toLocaleDateString([], {
+					weekday: "long",
+					month: "short",
+					day: "numeric",
+				}),
+			);
+		}, 1000);
+		return () => clearInterval(interval);
+	}, []);
+
+	const isAssetReady = useIsAssetLoading();
+
+	if (!isAssetReady) return null;
+
 	return (
 		<Box tb={"flex items-center justify-center h-full"}>
 			<FrameAnimation
 				src={"./example_assets/zombie_frames"}
-				height={150}
-				width={150}
+				height={120}
+				width={120}
+				frameRate={10}
 			/>
+			<Column align="center" justify="center">
+				<TtfText
+					fontPath={"./example_assets/raw_fonts/JollyLodger.ttf"}
+					fontSize={60}
+					tb={"text-[#baba37]"}
+				>
+					{time}
+				</TtfText>
+
+				<TtfText
+					fontPath={"./example_assets/raw_fonts/JollyLodger.ttf"}
+					fontSize={30}
+					tb={"text-[#5ab19a]"}
+				>
+					{date}
+				</TtfText>
+			</Column>
 		</Box>
 	);
 }
@@ -21,5 +74,6 @@ const [renderer, render] = await CreateRenderer({
 	host: process.env.DISPLAY_ADDRESS as string,
 	port: 81,
 });
+await renderer.WipeAssetsAsync();
 
 render(<App />);
