@@ -4,9 +4,9 @@ import { config } from "dotenv";
 import { useEffect, useMemo, useState } from "react";
 
 function ValueToColorHex(value: number) {
-	const g = 0//value % 256;
-	const r = value % 256;;
-	const b = 0//value % 256;;
+	const g = 0;
+	const r = value % 256;
+	const b = 0;
 	return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
@@ -31,13 +31,12 @@ function App() {
 			setTimeValues((prev) =>
 				prev.map((v) => {
 					const shouldChange = Math.random() < 0.05;
-					if (!shouldChange) 
-						return DecrementTileValue(v);
-					
+					if (!shouldChange) return DecrementTileValue(v);
+
 					return Math.floor(Math.random() * 256);
 				}),
 			);
-		}, 10);
+		}, 50);
 		return () => clearInterval(interval);
 	}, []);
 

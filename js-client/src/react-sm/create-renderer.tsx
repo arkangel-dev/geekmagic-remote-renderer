@@ -50,6 +50,14 @@ export const geekMagicContext = createContext<GeekMagicContextType | null>(
 	null,
 );
 
+// Clear reacts performance stats
+// grows really big on quick renders
+const perfCleanupTimer = setInterval(() => {
+	performance.clearMeasures();
+	performance.clearMarks();
+}, 1000);
+perfCleanupTimer.unref();
+
 export default async function CreateRenderer(props: {
 	host: string;
 	port: number;
