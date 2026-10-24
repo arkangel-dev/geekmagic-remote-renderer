@@ -47,16 +47,16 @@ function App() {
 			/>
 			<Column align="center" justify="center">
 				<TtfText
-					fontPath={"./example_assets/raw_fonts/JollyLodger.ttf"}
-					fontSize={60}
+					fontPath={"./example_assets/raw_fonts/handjet.ttf"}
+					fontSize={50}
 					tb={"text-[#F3D040]"}
 				>
 					{time}
 				</TtfText>
 
 				<TtfText
-					fontPath={"./example_assets/raw_fonts/JollyLodger.ttf"}
-					fontSize={30}
+					fontPath={"./example_assets/raw_fonts/handjet.ttf"}
+					fontSize={25}
 					tb={"text-[#2EA082]"}
 				>
 					{date}

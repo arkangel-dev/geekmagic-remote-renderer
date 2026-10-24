@@ -20,6 +20,7 @@ export type AllowedStyleProperty =
 export interface BaseGeekNode {
 	style?: Styles;
 	tb?: string;
+	key?: any;
 }
 
 export type InternalNodeName =
