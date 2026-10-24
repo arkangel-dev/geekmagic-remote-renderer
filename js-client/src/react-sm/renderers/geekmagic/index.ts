@@ -73,6 +73,11 @@ function markLayoutChanges(
 		// Blit over the node's old on-screen rect with its nearest ancestor's
 		// background before it (or whatever's now behind it) gets redrawn.
 		if (node.previousLayout) {
+			if (node.type === "frameAnimationBox") {
+				renderer.StopAnimation({
+					animationId: node.props.animationId as number,
+				});
+			}
 			renderer.FillRect({
 				color: GetAncestorBackgroundColor(node),
 				x: node.previousLayout.left,
@@ -147,6 +152,10 @@ function visit(
 			case "imageBox":
 				RenderImageBox(renderContext);
 				break;
+
+			case "frameAnimationBox":
+				RenderFrameAnimationBox(renderContext);
+				break;
 		}
 	}
 
@@ -213,5 +222,16 @@ function RenderImageBox(ctx: RenderPrimitiveElementProps) {
 		width: node.props.width as number,
 		height: node.props.height as number,
 		file: node.props.src as string,
+	});
+}
+
+function RenderFrameAnimationBox(ctx: RenderPrimitiveElementProps) {
+	const { node, absoluteLayout, renderer } = ctx;
+	console.log(`Starting animation with file: ${node.props.src} and animationId: ${node.props.animationId}`);
+	renderer.StartAnimation({
+		x: Math.round(absoluteLayout.left),
+		y: Math.round(absoluteLayout.top),
+		file: node.props.src as string,
+		animationId: node.props.animationId as number,
 	});
 }

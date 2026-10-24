@@ -8,7 +8,7 @@ extern bool IsDisplayDebugEnabled;
 class DebugSerial {
 private:
   String buffer;
-  static const size_t MAX_BUFFER_SIZE = 128;
+  static const size_t MAX_BUFFER_SIZE = 1024;
 
 public:
   DebugSerial();

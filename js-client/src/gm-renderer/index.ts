@@ -19,6 +19,8 @@ import type {
 	RegisterPinStateChangeData,
 	UnregisterPinStateChangeData,
 	DrawRGB565Data,
+	StartAnimationData,
+	StopAnimationData,
 } from "./types.js";
 import { existsSync, readFile, readFileSync } from "node:fs";
 
@@ -383,6 +385,31 @@ export class GeekMagicRenderer {
 		return this;
 	}
 
+	StartAnimation(props: StartAnimationData): GeekMagicRenderer {
+		this.operation_buffer.push(
+			Buffer.concat([
+				Buffer.from([OperationCodes.OP_DRAW_GMPANIF1, 4]),
+				this.paramU16(ParameterCodes.PARAM_X, props.x),
+				this.paramU16(ParameterCodes.PARAM_Y, props.y),
+				this.paramU16(ParameterCodes.PARAM_ANIMATION_ID, props.animationId),
+				this.paramText(ParameterCodes.PARAM_FILENAME, props.file),
+			]),
+		);
+
+		return this;
+	}
+
+	StopAnimation(props: StopAnimationData): GeekMagicRenderer {
+		this.operation_buffer.push(
+			Buffer.concat([
+				Buffer.from([OperationCodes.OP_STOP_GMPANIF1, 1]),
+				this.paramU16(ParameterCodes.PARAM_ANIMATION_ID, props.animationId),
+			]),
+		);
+
+		return this;
+	}
+
 	/**
 	 * Closes the WebSocket connection if it is open.
 	 * @returns A promise that resolves when the connection is closed.
@@ -521,12 +548,13 @@ export class GeekMagicRenderer {
 		const formdata = new FormData();
 		formdata.append("file", new Blob([readFileSync(filePath)]), filePath);
 		this.assetListCache = null;
-		console.log(`Uploading asset: ${filePath}`);
+		process.stdout.write(`Uploading asset: ${filePath}...`);
 		await fetch(this.management_url + "/api/files", {
 			method: "POST",
 			body: formdata,
 			redirect: "follow",
 		});
+		process.stdout.write(` Done.\n`);
 	}
 
 	private buildPayload(): Buffer {

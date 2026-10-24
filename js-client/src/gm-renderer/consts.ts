@@ -17,7 +17,8 @@ const enum RenderParameterCodes {
 	PARAM_FILENAME = 0x10,
 	PARAM_DITHER_COLOR = 0x11,
 	PARAM_DITHER_SIZE = 0x12,
-	PARAM_PIN_ID = 0x013,
+	PARAM_PIN_ID = 0x13,
+	PARAM_ANIMATION_ID = 0x14,
 }
 
 const enum RenderingOperationCodes {
@@ -37,6 +38,8 @@ const enum RenderingOperationCodes {
 	OP_REGISTER_GPIO_CALLBACK = 0x0e,
 	OP_CLEAR_GPIO_CALLBACK = 0x0f,
 	OP_DRAW_LFS_RGB565 = 0x10,
+	OP_DRAW_GMPANIF1 = 0x11,
+	OP_STOP_GMPANIF1 = 0x12,
 }
 
 const enum AuxParameterCodes {

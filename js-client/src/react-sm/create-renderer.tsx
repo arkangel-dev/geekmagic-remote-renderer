@@ -25,8 +25,8 @@ interface AsyncLocalStorageType {
 
 export interface GeekMagicContextType {
 	renderer: GeekMagicRenderer;
-	isAssetLoading: boolean;
-	setIsAssetLoading: React.Dispatch<React.SetStateAction<boolean>>;
+	isAssetLoading: number;
+	setIsAssetLoading: React.Dispatch<React.SetStateAction<number>>;
 	/**
 	 * Queues a font for loading and returns a promise that resolves once it
 	 * and other fonts requested in the same tick are loaded in.
@@ -78,11 +78,13 @@ export default async function CreateRenderer(props: {
 		.Send();
 
 	const root = createRoot(container, () => {
-		// This is needed for making sure that renderer 
-		// is available for when commits are triggered via 
+		// This is needed for making sure that renderer
+		// is available for when commits are triggered via
 		// state updates from the box
-		asyncLocalStorage.run({ renderer }, () => RenderContent(container, renderer));
-		console.log(PrintTree(container));
+		asyncLocalStorage.run({ renderer }, () =>
+			RenderContent(container, renderer),
+		);
+		// console.log(PrintTree(container));
 	});
 
 	const moddedCallback = (element: React.ReactNode) => {
@@ -119,7 +121,7 @@ function StateInjector(props: {
 	renderer: GeekMagicRenderer;
 	children: React.ReactNode;
 }) {
-	const [isAssetLoading, setIsAssetLoading] = useState(false);
+	const [loadingAssetCount, setLoadingAssetCount] = useState(0);
 	const fontBatchRef = useRef<FontBatchState>({
 		pending: new Map(),
 		promises: new Map(),
@@ -139,7 +141,7 @@ function StateInjector(props: {
 		const fontsToLoad = Array.from(batch.pending.values());
 		batch.pending.clear();
 
-		setIsAssetLoading(true);
+		setLoadingAssetCount((count) => count + 1);
 		LoadFontsAsync(props.renderer, fontsToLoad)
 			.then(() => {
 				for (const font of fontsToLoad) {
@@ -156,7 +158,7 @@ function StateInjector(props: {
 					batch.promises.delete(font.vlwName);
 				}
 			})
-			.finally(() => setIsAssetLoading(false));
+			.finally(() => setLoadingAssetCount((count) => count - 1));
 	}, [props.renderer]);
 
 	const requestFont = useCallback(
@@ -185,8 +187,8 @@ function StateInjector(props: {
 		<geekMagicContext.Provider
 			value={{
 				renderer: props.renderer,
-				isAssetLoading,
-				setIsAssetLoading,
+				isAssetLoading: loadingAssetCount,
+				setIsAssetLoading: setLoadingAssetCount,
 				requestFont,
 			}}
 		>

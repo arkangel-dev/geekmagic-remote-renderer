@@ -1,5 +1,11 @@
 import CreateRenderer from "@geekmagic-react/create-renderer.js";
-import { Box, ImageBox, TtfText, Text } from "@geekmagic-react/elements.js";
+import {
+	Box,
+	ImageBox,
+	TtfText,
+	Text,
+	FrameAnimation,
+} from "@geekmagic-react/elements.js";
 import { cn } from "@geekmagic-react/tailbreeze.js";
 import { config } from "dotenv";
 import { useEffect, useState } from "react";
@@ -265,7 +271,7 @@ function TitleBar(props: { current: CurrentWeather | undefined }) {
 
 	return (
 		<Box tb="flex justify-between items-center p-[2] gap-[10] flex-row w-full">
-			<ImageBox
+			{/* <ImageBox
 				src={
 					props.current
 						? getWeatherIcon(props.current.conditionId)
@@ -274,6 +280,11 @@ function TitleBar(props: { current: CurrentWeather | undefined }) {
 				height={80}
 				width={80}
 				colorDepth={8}
+			/> */}
+			<FrameAnimation
+				src={"./example_assets/zombie_frames"}
+				height={80}
+				width={80}
 			/>
 			<Box tb="flex flex-col items-center">
 				<TtfText fontPath="example_assets/raw_fonts/Orienta.ttf" fontSize={50}>
@@ -405,5 +416,5 @@ const [renderer, render] = await CreateRenderer({
 	port: 81,
 });
 
-// await renderer.WipeAssetsAsync();
+await renderer.WipeAssetsAsync();
 render(<App />);

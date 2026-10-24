@@ -24,6 +24,13 @@ void RegisterCallbackPin(std::uint8_t gpioPin) {
     pinMode(gpioPin, INPUT_PULLUP);
 }
 
+void UnregisterAllCallbackPins() {
+    for (std::uint8_t pin = 0; pin < 16; ++pin) {
+        if (callbackPins[pin])
+            UnregisterCallbackPin(pin);
+    }
+}
+
 /**
  * Unregisters a GPIO pin from callback activity monitoring
  * We wouldn't want the websocket channel to be filled up with
