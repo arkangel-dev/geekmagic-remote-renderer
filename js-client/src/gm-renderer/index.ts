@@ -53,6 +53,8 @@ export interface FontBlitSetting {
 export class GeekMagicRenderer {
 	private operation_buffer: Buffer[] = [];
 	private websocket: WebSocket | null = null;
+	private address: string | null = null;
+	private port: number | null = null;
 	private pinStateChangeCallbacks = new Map<
 		number,
 		Set<(state: boolean) => void>
@@ -439,6 +441,8 @@ export class GeekMagicRenderer {
 	): Promise<GeekMagicRenderer> {
 		this.websocket = new WebSocket(`ws://${address}:${port}`);
 		this.websocket.on("message", (data) => this.onWebsocketResponse(data));
+		this.address = address;
+		this.port = port;
 
 		await new Promise<void>((resolve, reject) => {
 			this.websocket!.onopen = () => {
@@ -479,11 +483,14 @@ export class GeekMagicRenderer {
 	 * @throws Error if the WebSocket is not connected or not open.
 	 */
 	Send() {
-		if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN)
-			throw new Error("WebSocket is not connected or not open");
+		if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
+			this.ConnectAsync(this.address!, this.port!);
+			return;
+		}
+
 		if (this.operation_buffer.length === 0) return this;
 		const payload = this.buildPayload();
-		this.websocket.send(payload);
+		this.websocket!.send(payload);
 		this.operation_buffer = [];
 		return this;
 	}
