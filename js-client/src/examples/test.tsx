@@ -1,62 +1,60 @@
-import { readdirSync, writeFileSync } from "node:fs";
-import { Image, loadImage } from "@napi-rs/canvas";
-import {
-	BuildAnimation,
-	SerializeAnimation,
-} from "@geekmagic-websocket/animation-builder/index.js";
-import { ExportAnimationFrames } from "@geekmagic-websocket/animation-builder/anim-verify.js";
-import { config } from "dotenv";
 import CreateRenderer from "@geekmagic-react/create-renderer.js";
+import { Box } from "@geekmagic-react/elements.js";
+import { config } from "dotenv";
+import { useEffect, useMemo, useState } from "react";
 
-const frameFolder = "./example_assets/zombie_frames";
-const frameFiles = readdirSync(frameFolder);
-const images: Image[] = [];
-for (const file of frameFiles) {
-	const filePath = `${frameFolder}/${file}`;
-	const image = await loadImage(filePath);
-	images.push(image);
+function ValueToColorHex(value: number) {
+	const g = 0//value % 256;
+	const r = value % 256;;
+	const b = 0//value % 256;;
+	return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
-const finalAnimation = BuildAnimation({
-	raw_images: images,
-	predelay: 100,
-	width: 120,
-	height: 120,
-	delta: 30,
-	max_colors: 60,
-	quantizer: "mediancut",
-});
+function Tile(props: { value: number; key?: any }) {
+	const color = useMemo(() => ValueToColorHex(props.value), [props.value]);
+	return <Box tb={`w-[8] h-[8] rounded-[2] bg-[${color}]`}></Box>;
+}
 
-const serializedAnimation = SerializeAnimation(finalAnimation);
+function DecrementTileValue(value: number) {
+	return Math.max(0, value - 10);
+}
 
-//
+function App() {
+	const tileCount = 400;
 
-// console.log(`Final size: ${serializedAnimation.length / 1024} KB`);
+	const [timeValues, setTimeValues] = useState(
+		Array.from({ length: tileCount }, () => 0),
+	);
 
-// Convert it back
-// Use this
-// ffplay -loop 0 -framerate 12 -i 'frame_%03d.png' -vf "scale=800:800:flags=neighbor"
-// ExportAnimationFrames(serializedAnimation, "./.test_exported_frames");
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setTimeValues((prev) =>
+				prev.map((v) => {
+					const shouldChange = Math.random() < 0.05;
+					if (!shouldChange) 
+						return DecrementTileValue(v);
+					
+					return Math.floor(Math.random() * 256);
+				}),
+			);
+		}, 10);
+		return () => clearInterval(interval);
+	}, []);
 
-// Write to a file
-writeFileSync("./ser.bin", serializedAnimation);
+	return (
+		<Box tb={"flex items-center justify-center flex-wrap h-full gap-[4]"}>
+			{timeValues.map((v, i) => {
+				return <Tile value={v} key={i} />;
+			})}
+		</Box>
+	);
+}
 
 config();
-const [renderer, _] = await CreateRenderer({
+const [renderer, render] = await CreateRenderer({
 	host: process.env.DISPLAY_ADDRESS as string,
 	port: 81,
 });
+await renderer.WipeAssetsAsync();
 
-
-
-// await renderer.WipeAssetsAsync();
-// await renderer.UploadAssetAsync("./ser.bin");
-renderer.StartAnimation({
-	animationId: 0,
-	x: 50,
-	y: 125,
-	file: "ser.bin",
-});
-renderer.Send();
-
-console.log("Asset uploaded successfully.");
+render(<App />);
