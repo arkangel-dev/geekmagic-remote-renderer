@@ -73,6 +73,11 @@ function markLayoutChanges(
 		// Blit over the node's old on-screen rect with its nearest ancestor's
 		// background before it (or whatever's now behind it) gets redrawn.
 		if (node.previousLayout) {
+			if (node.type === "frameAnimationBox") {
+				renderer.StopAnimation({
+					animationId: node.props.animationId as number,
+				});
+			}
 			renderer.FillRect({
 				color: GetAncestorBackgroundColor(node),
 				x: node.previousLayout.left,

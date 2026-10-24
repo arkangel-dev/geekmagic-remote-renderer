@@ -6,7 +6,7 @@ export const config = {
 	// leading "/", point size and ".vlw", and SPIFFS does NOT accept underscores.
 	outputName: "SankofaDisplayRegular",
 
-	outputDir: "example_assets",
+	outputDir: ".asset_cache",
 
 	// Font size in pixels (Processing treats "points" as pixels)
 	fontSize: 30,

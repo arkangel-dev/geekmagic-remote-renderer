@@ -36,9 +36,6 @@ function App() {
 		return () => clearInterval(interval);
 	}, []);
 
-	const isAssetReady = useIsAssetLoading();
-
-	if (!isAssetReady) return null;
 
 	return (
 		<Box tb={"flex items-center justify-center h-full"}>
