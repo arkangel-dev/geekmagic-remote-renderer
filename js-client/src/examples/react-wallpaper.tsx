@@ -19,9 +19,8 @@ function DecrementTileValue(value: number) {
 	return Math.max(0, value - 10);
 }
 
-function App() {
+function Wallpaper() {
 	const tileCount = 400;
-
 	const [timeValues, setTimeValues] = useState(
 		Array.from({ length: tileCount }, () => 0),
 	);
@@ -50,10 +49,8 @@ function App() {
 }
 
 config();
-const [renderer, render] = await CreateRenderer({
+const [_, render] = await CreateRenderer({
 	host: process.env.DISPLAY_ADDRESS as string,
 	port: 81,
 });
-await renderer.WipeAssetsAsync();
-
-render(<App />);
+render(<Wallpaper />);

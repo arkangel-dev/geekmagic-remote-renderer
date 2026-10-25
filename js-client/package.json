@@ -14,6 +14,7 @@
 		"example:react:hw": "pnpx tsx watch src/examples/react-hw-interact.tsx",
 		"example:react:weather": "pnpx tsx watch src/examples/react-weather.tsx",
 		"example:react:zombie": "pnpx tsx watch src/examples/zombie.tsx",
+		"example:react:wallpaper": "pnpx tsx watch src/examples/react-wallpaper.tsx",
 		"font:convert": "pnpx tsx src/gm-renderer/font-converter/index.ts",
 		"test": "pnpx tsx watch src/examples/test.tsx"
 	},

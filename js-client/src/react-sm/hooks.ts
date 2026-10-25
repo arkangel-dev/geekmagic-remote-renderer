@@ -1,5 +1,7 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { geekMagicContext } from "./create-renderer.js";
+import { exec } from "node:child_process";
+import type { Readable } from "node:stream";
 
 export interface UseUploadAssetResult {
 	uploaded: boolean;
@@ -149,4 +151,101 @@ export function useButton(options: UseButtonCallbackProps) {
 			options.longPressDuration,
 		);
 	}
+}
+
+interface LockStateShared {
+	subscribers: Set<(locked: boolean) => void>;
+	interval?: ReturnType<typeof setInterval> | undefined;
+	lastState: boolean | null;
+	pollInFlight: boolean;
+}
+
+/**
+ * Hook to get the current lock state of the device
+ */
+export function useLockState() {
+	const renderer = useGeekMagicContext();
+	const sharedKey = "_lockStateShared";
+
+	const getShared = () => {
+		let shared = renderer.miscCache.current.get(sharedKey) as
+			| LockStateShared
+			| undefined;
+		if (!shared) {
+			shared = { subscribers: new Set(), lastState: null, pollInFlight: false };
+			renderer.miscCache.current.set(sharedKey, shared);
+		}
+		return shared;
+	};
+
+	const [locked, setLocked] = useState<boolean | null>(
+		() => getShared().lastState,
+	);
+
+	async function readReableObj(readable: Readable | null): Promise<string> {
+		if (!readable) return "";
+		const chunks: Buffer[] = [];
+		for await (const chunk of readable) chunks.push(Buffer.from(chunk));
+		return Buffer.concat(chunks).toString()?.trim() ?? "";
+	}
+
+	// Check KDE state
+	async function _isLinuxLockedAsync() {
+		const { stdout } = await exec(
+			`loginctl show-session "$(loginctl | awk -v user="$(whoami)" '$3 == user {print $1; exit}')" -p LockedHint`,
+		);
+		var output = await readReableObj(stdout);
+		return output === "LockedHint=yes";
+	}
+
+	// Check if the device is currently locked
+	async function isLocked() {
+		const platform = process.platform;
+		switch (platform) {
+			case "linux":
+				return await _isLinuxLockedAsync();
+			case "win32":
+				// No one really cares about windows
+				return false;
+			default:
+				return false;
+		}
+	}
+
+	useEffect(() => {
+		const shared = getShared();
+
+		async function poll() {
+			if (shared.pollInFlight) return;
+			shared.pollInFlight = true;
+			try {
+				const lockedState = await isLocked();
+				shared.lastState = lockedState;
+				for (const subscriber of shared.subscribers) subscriber(lockedState);
+			} catch (error) {
+				console.error("Failed to read lock state:", error);
+			} finally {
+				shared.pollInFlight = false;
+			}
+		}
+
+		shared.subscribers.add(setLocked);
+		if (shared.interval === undefined) {
+			// First subscriber starts the single shared poller
+			shared.interval = setInterval(poll, 1000);
+			void poll();
+		} else if (shared.lastState !== null) {
+			setLocked(shared.lastState);
+		}
+
+		return () => {
+			shared.subscribers.delete(setLocked);
+			if (shared.subscribers.size === 0 && shared.interval !== undefined) {
+				clearInterval(shared.interval);
+				shared.interval = undefined;
+			}
+		};
+	}, []);
+
+	return locked;
 }

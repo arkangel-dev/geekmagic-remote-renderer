@@ -32,6 +32,7 @@ export interface GeekMagicContextType {
 	 * and other fonts requested in the same tick are loaded in.
 	 */
 	requestFont: (settings: FontImportSettings) => Promise<void>;
+	miscCache: React.RefObject<Map<string, any>>;
 }
 
 // TODO: Stop using async local storage for the renderer context
@@ -136,6 +137,7 @@ function StateInjector(props: {
 		resolvers: new Map(),
 		scheduled: false,
 	});
+	const miscCache = useRef(new Map<string, any>());
 
 	// Flushes every font queued so far in a single LoadFontsAsync call, rather
 	// than converting/uploading one font per `TffFontText` instance. Queuing
@@ -198,6 +200,7 @@ function StateInjector(props: {
 				isAssetLoading: loadingAssetCount,
 				setIsAssetLoading: setLoadingAssetCount,
 				requestFont,
+				miscCache,
 			}}
 		>
 			{props.children}
